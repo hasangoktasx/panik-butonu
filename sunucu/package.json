@@ -1,0 +1,12 @@
+{
+  "name": "panik-butonu",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "sim": "node simulator.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
