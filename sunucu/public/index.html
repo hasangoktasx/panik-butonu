@@ -8,139 +8,348 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   :root {
-    --zemin: #f6f1e8; --kart: #fffdf9; --yazi: #2a2622; --soluk: #7a7068; --cizgi: #e4dccf;
-    --kirmizi: #d93025; --yesil: #1e8e3e; --sari: #e8a400;
+    --zemin: #f6f1e8; --kart: #fffdf9; --yazi: #2a2622; --soluk: #7a7068; --cizgi: #e4dccf; --yumusak: #efe8dc;
+    --kirmizi: #d93025; --koyuKirmizi: #a1170f; --yesil: #1e8e3e; --amber: #c77800; --mavi: #2f6fd6;
+    color-scheme: light;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
-  body { background: var(--zemin); color: var(--yazi); font: 15px/1.4 system-ui, "Segoe UI", sans-serif;
-         display: flex; flex-direction: column; }
-  header { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--cizgi); background: var(--kart); }
-  header h1 { font-size: 18px; margin: 0; }
-  header .bosluk { flex: 1; }
-  #baglanti { font-size: 13px; color: var(--soluk); }
+  body { background: var(--zemin); color: var(--yazi); font: 14px/1.45 system-ui, "Segoe UI", sans-serif; display: flex; flex-direction: column; }
+  button, input, textarea { font: inherit; color: inherit; }
+  button { border: 1px solid var(--cizgi); background: var(--kart); border-radius: 8px; padding: 6px 11px; cursor: pointer; }
+  button:hover { border-color: var(--soluk); }
+  button.ana { background: var(--yazi); color: #fff; border-color: var(--yazi); }
+  button.tehlike { background: var(--kirmizi); color: #fff; border-color: var(--koyuKirmizi); }
+  button:disabled { opacity: .5; cursor: default; }
+  input, textarea { border: 1px solid var(--cizgi); border-radius: 8px; padding: 7px 9px; background: #fff; width: 100%; }
+  textarea { resize: vertical; min-height: 40px; }
+  a { color: inherit; }
+  .soluk { color: var(--soluk); }
+
+  header { display: flex; align-items: center; gap: 12px; padding: 8px 14px; background: var(--kart); border-bottom: 1px solid var(--cizgi); flex-wrap: wrap; }
+  header h1 { font-size: 17px; margin: 0; }
+  .ozet { display: flex; gap: 6px; flex-wrap: wrap; }
+  .cip { font-size: 12px; padding: 2px 9px; border-radius: 20px; background: var(--yumusak); color: var(--soluk); }
+  .cip b { color: var(--yazi); }
+  .cip.kirmizi { background: var(--kirmizi); color: #fff; }
+  .cip.kirmizi b { color: #fff; }
+  #baglanti { font-size: 12.5px; color: var(--soluk); }
   #baglanti::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--soluk); margin-right: 6px; }
   #baglanti.acik::before { background: var(--yesil); }
-  button { font: inherit; border: 1px solid var(--cizgi); background: var(--kart); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
-  button:hover { border-color: var(--soluk); }
-  a { color: inherit; }
+  .bosluk { flex: 1; }
+  .operator { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--soluk); }
+  .operator input { width: 130px; padding: 5px 8px; }
+  header a { font-size: 13px; }
 
-  #alarm { display: none; background: var(--kirmizi); color: #fff; padding: 12px 16px; gap: 12px; align-items: center; flex-wrap: wrap; animation: yanip 1s infinite; }
+  #alarm { display: none; background: var(--kirmizi); color: #fff; padding: 10px 14px; gap: 12px; align-items: center; flex-wrap: wrap; animation: yanip 1s infinite; }
   #alarm.var { display: flex; }
-  #alarm strong { font-size: 20px; letter-spacing: .5px; }
-  #alarm button { background: #fff; color: var(--kirmizi); border: 0; font-weight: 600; }
-  @keyframes yanip { 50% { background: #a1170f; } }
+  #alarm strong { font-size: 19px; letter-spacing: .5px; }
+  #alarm .plaka { color: var(--yazi); }
+  #alarm a { color: #fff; font-weight: 600; }
+  #alarm button { background: #fff; color: var(--kirmizi); border: 0; font-weight: 700; }
+  @keyframes yanip { 50% { background: var(--koyuKirmizi); } }
 
-  main { display: grid; grid-template-columns: 340px 1fr; flex: 1; min-height: 0; }
-  aside { overflow: auto; border-right: 1px solid var(--cizgi); padding: 12px; display: flex; flex-direction: column; gap: 16px; }
-  aside h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--soluk); margin: 0 0 8px; }
+  main { flex: 1; min-height: 0; display: grid; grid-template-columns: 360px 1fr; }
+  aside { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--cizgi); }
+  .sekmeler { display: flex; border-bottom: 1px solid var(--cizgi); background: var(--kart); }
+  .sekmeler button { flex: 1; border: 0; border-radius: 0; background: none; padding: 10px; font-weight: 600; color: var(--soluk); border-bottom: 2px solid transparent; }
+  .sekmeler button.secili { color: var(--yazi); border-bottom-color: var(--yazi); }
+  .sekmeler b { background: var(--yumusak); border-radius: 10px; padding: 0 7px; font-size: 12px; margin-left: 4px; color: var(--yazi); }
+  .sekmeler b.kirmizi { background: var(--kirmizi); color: #fff; }
+  .sekme { flex: 1; overflow: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+  .sekme[hidden] { display: none; }
+  .arac-ust { display: flex; gap: 6px; }
+  .arac-ust button { white-space: nowrap; }
   .liste { display: flex; flex-direction: column; gap: 8px; }
-  .bos { color: var(--soluk); font-size: 14px; }
-  .arac, .olay { background: var(--kart); border: 1px solid var(--cizgi); border-radius: 10px; padding: 10px 12px; }
+  .bos { color: var(--soluk); padding: 8px 2px; }
+  .kart { background: var(--kart); border: 1px solid var(--cizgi); border-radius: 10px; padding: 10px 12px; }
   .arac { cursor: pointer; }
-  .arac.panik { border-color: var(--kirmizi); box-shadow: 0 0 0 2px var(--kirmizi) inset; }
-  .arac .ust { display: flex; align-items: center; gap: 8px; }
-  .plaka { font-weight: 700; font-family: ui-monospace, Consolas, monospace; letter-spacing: .5px;
-           border: 2px solid var(--yazi); border-radius: 4px; padding: 0 6px; background: #fff; }
-  .durum { font-size: 12px; margin-left: auto; }
-  .durum::before { content: "● "; }
-  .durum.cevrimici { color: var(--yesil); } .durum.cevrimdisi { color: var(--soluk); } .durum.panik { color: var(--kirmizi); font-weight: 700; }
-  .alt { font-size: 12px; color: var(--soluk); margin-top: 4px; }
-  .olay { display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; align-items: center; }
-  .olay.acik { border-color: var(--kirmizi); }
-  .olay .alt { grid-column: 1 / -1; margin: 0; }
-  #harita { min-height: 300px; }
+  .arac:hover { border-color: #cdbfa9; }
+  .arac.secili { border-color: var(--yazi); box-shadow: 0 0 0 1px var(--yazi) inset; }
+  .arac.panik, .olay.acik { border-color: var(--kirmizi); box-shadow: 0 0 0 2px var(--kirmizi) inset; }
+  .arac.goruldu, .olay.goruldu { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber) inset; }
+  .ust { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .ust .ad { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .plaka { font: 700 13px ui-monospace, Consolas, monospace; letter-spacing: .5px; border: 2px solid var(--yazi); border-radius: 4px; padding: 0 6px; background: #fff; white-space: nowrap; }
+  .plaka.buyuk { font-size: 17px; padding: 1px 8px; }
+  .pill { font-size: 11.5px; font-weight: 700; padding: 1px 8px; border-radius: 20px; margin-left: auto; white-space: nowrap; }
+  .pill.panik, .pill.acik { background: var(--kirmizi); color: #fff; }
+  .pill.goruldu { background: #fbe6c2; color: #7a4a00; }
+  .pill.cevrimici, .pill.kapandi { background: #dff3e4; color: var(--yesil); }
+  .pill.cevrimdisi, .pill.hic, .pill.iptal { background: var(--yumusak); color: var(--soluk); }
+  .alt { font-size: 12.5px; color: var(--soluk); margin-top: 3px; }
+  .sinyal { display: inline-flex; gap: 1px; align-items: flex-end; height: 10px; vertical-align: -1px; }
+  .sinyal i { width: 3px; background: #d5ccbe; border-radius: 1px; }
+  .sinyal i.dolu { background: var(--yazi); }
+  .filtre { display: flex; gap: 6px; align-items: center; }
+  .filtre a { margin-left: auto; font-size: 12.5px; }
+
+  #haritaAlan { position: relative; min-height: 0; }
+  #harita { position: absolute; inset: 0; }
+  #detay { position: absolute; top: 12px; right: 12px; width: 370px; max-height: calc(100% - 24px); overflow: auto; z-index: 500;
+           background: var(--kart); border: 1px solid var(--cizgi); border-radius: 12px; box-shadow: 0 10px 34px #0003; padding: 14px; }
+  #detay[hidden] { display: none; }
+  #detay h3 { font-size: 11.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--soluk); margin: 16px 0 6px; }
+  #detay .kapatX { margin-left: 4px; border: 0; background: none; font-size: 18px; padding: 0 4px; }
+  .bilgi > div { margin: 2px 0; }
+  .d-grid { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 13px; margin: 0; }
+  .d-grid dt { color: var(--soluk); }
+  .d-grid dd { margin: 0; }
+  .satirlar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .hizli button { font-size: 12px; padding: 3px 9px; border-radius: 20px; }
+  form.mesaj { display: flex; gap: 6px; margin-top: 8px; }
+  form.mesaj button { white-space: nowrap; }
+  .komut { font-size: 12.5px; color: var(--soluk); display: flex; gap: 8px; margin-top: 4px; }
+  .komut .metin { color: var(--yazi); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .komut .iletildi { color: var(--yesil); }
+  .segment { display: inline-flex; border: 1px solid var(--cizgi); border-radius: 8px; overflow: hidden; }
+  .segment button { border: 0; border-radius: 0; padding: 4px 10px; font-size: 12.5px; }
+  .segment button.secili { background: var(--yazi); color: #fff; }
+  .form label { display: block; font-size: 12px; color: var(--soluk); margin: 8px 0 3px; }
+  .mini-olay { display: flex; gap: 8px; align-items: center; font-size: 12.5px; cursor: pointer; padding: 3px 0; }
+  .mini-olay .pill { margin-left: 0; }
+
+  .zamanCizelgesi { list-style: none; margin: 8px 0 0 4px; padding: 0 0 0 12px; border-left: 2px solid var(--cizgi); font-size: 12.5px; }
+  .zamanCizelgesi li { margin: 4px 0; position: relative; }
+  .zamanCizelgesi li::before { content: ""; position: absolute; left: -18px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--cizgi); border: 2px solid var(--kart); }
+  .zamanCizelgesi li.panik::before, .zamanCizelgesi li.tekrar::before { background: var(--kirmizi); }
+  .zamanCizelgesi li.goruldu::before { background: var(--amber); }
+  .zamanCizelgesi li.kapandi::before, .zamanCizelgesi li.iletildi::before { background: var(--yesil); }
+  .zamanCizelgesi li.komut::before, .zamanCizelgesi li.not::before { background: var(--mavi); }
+  .zamanCizelgesi time { color: var(--soluk); font-variant-numeric: tabular-nums; margin-right: 5px; }
+  .olay textarea { margin-top: 8px; }
+  .olay .satirlar { margin-top: 8px; }
+  details summary { cursor: pointer; color: var(--soluk); font-size: 12.5px; margin-top: 6px; }
+
+  .adres { font-size: 12.5px; margin-top: 3px; }
+  .pill.kopuk { background: var(--yazi); color: #fff; margin-left: 0; animation: yanip2 1s infinite; }
+  @keyframes yanip2 { 50% { opacity: .55; } }
+  .asistan { margin-top: 10px; border: 1px solid #d9d0f5; background: #f7f4ff; border-radius: 9px; padding: 9px 11px; font-size: 13px; }
+  .asistan h4 { margin: 0 0 4px; font-size: 11.5px; color: #5b3fc4; text-transform: uppercase; letter-spacing: .06em; display: flex; align-items: center; gap: 6px; }
+  .asistan h4 button { margin-left: auto; font-size: 11.5px; padding: 1px 8px; text-transform: none; letter-spacing: 0; }
+  .asistan ol { margin: 4px 0; padding-left: 18px; }
+  .asistan li { margin: 2px 0; }
+  .asistan .mesajlar { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .asistan .mesajlar button { font-size: 12px; padding: 3px 10px; border-radius: 20px; background: #fff; border-color: #cfc3f3; }
+  .asistan .hata { color: var(--kirmizi); }
+  .asistan .uyari { font-size: 11.5px; color: var(--soluk); margin-top: 6px; }
+  .yukleniyor::after { content: " ⋯"; animation: yanip2 1s infinite; }
+  .rapor { white-space: pre-wrap; font-size: 12.5px; background: #fff; border: 1px solid var(--cizgi); border-radius: 8px; padding: 8px 10px; margin-top: 6px; max-height: 280px; overflow: auto; }
+  .soru { display: flex; gap: 6px; }
+  .soru[hidden], .soruCevap[hidden] { display: none; }
+  .soru button { white-space: nowrap; }
+  .soruCevap { font-size: 13px; white-space: pre-wrap; background: #f7f4ff; border: 1px solid #d9d0f5; border-radius: 9px; padding: 8px 10px; }
+  .cip.mor { background: #ece6ff; color: #5b3fc4; }
+  .cip.mor b { color: #5b3fc4; }
+
+  #toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--yazi); color: #fff; padding: 9px 15px; border-radius: 9px; display: none; z-index: 2000; max-width: 90vw; }
 
   .isaret { background: none; border: 0; }
   .isaret div { transform: translate(-50%, -100%); white-space: nowrap; width: max-content; font: 700 12px ui-monospace, Consolas, monospace;
-                background: #fff; border: 2px solid var(--yazi); border-radius: 4px; padding: 1px 5px; position: relative; }
+                background: #fff; border: 2px solid var(--yazi); border-radius: 4px; padding: 1px 5px; position: relative; cursor: pointer; }
   .isaret div::after { content: ""; position: absolute; left: 50%; bottom: -8px; margin-left: -4px; border: 4px solid transparent; border-top-color: var(--yazi); }
+  .isaret.secili div { box-shadow: 0 0 0 3px #2f6fd666; }
   .isaret.panik div { background: var(--kirmizi); color: #fff; border-color: #7a0e08; animation: zipla .6s infinite alternate; }
   .isaret.panik div::after { border-top-color: #7a0e08; }
-  .isaret.cevrimdisi div { opacity: .55; }
+  .isaret.goruldu div { background: #fbe6c2; border-color: var(--amber); }
+  .isaret.goruldu div::after { border-top-color: var(--amber); }
+  .isaret.cevrimdisi div, .isaret.hic div { opacity: .55; }
   @keyframes zipla { to { transform: translate(-50%, -125%); } }
 
-  @media (max-width: 760px) {
+  @media (max-width: 860px) {
     main { grid-template-columns: 1fr; grid-template-rows: 55vh auto; }
     aside { order: 2; border-right: 0; border-top: 1px solid var(--cizgi); }
+    #detay { left: 8px; right: 8px; width: auto; top: auto; bottom: 8px; max-height: 75%; }
+    .operator input { width: 100px; }
   }
 </style>
 </head>
 <body>
 <header>
-  <h1>Panik Paneli</h1>
+  <h1>🚨 Panik Paneli</h1>
+  <div class="ozet" id="ozet"></div>
   <span id="baglanti">Bağlanıyor…</span>
   <span class="bosluk"></span>
+  <label class="operator">Operatör <input id="operator" maxlength="40" placeholder="adın" /></label>
   <button id="sesBtn" title="Tarayıcılar, sayfaya bir kez tıklanmadan ses çalmaya izin vermez">🔇 Alarm sesini aç</button>
-  <a href="rehber/">3D rehber</a>
+  <a href="/rehber/">3D rehber</a>
 </header>
 
 <div id="alarm" role="alert">
   <strong>🚨 PANİK</strong>
   <span id="alarmMetin"></span>
-  <span class="bosluk" style="flex:1"></span>
+  <span class="bosluk"></span>
   <button id="alarmGoster">Haritada göster</button>
-  <button id="alarmOnayla">Gördüm, onayla</button>
+  <button id="alarmGor">Gördüm</button>
 </div>
 
 <main>
   <aside>
-    <section>
-      <h2>Araçlar</h2>
-      <div id="araclar" class="liste"><div class="bos">Henüz cihaz bağlanmadı.</div></div>
-    </section>
-    <section>
-      <h2>Panik olayları</h2>
-      <div id="olaylar" class="liste"><div class="bos">Olay yok.</div></div>
-    </section>
+    <div class="sekmeler">
+      <button data-sekme="araclar" class="secili">Araçlar <b id="aracSayi">0</b></button>
+      <button data-sekme="olaylar">Olaylar <b id="olaySayi">0</b></button>
+    </div>
+    <div class="sekme" id="sekme-araclar">
+      <div class="arac-ust">
+        <input id="ara" placeholder="Plaka, isim ya da araç ara" />
+        <button id="yeniAracBtn">+ Araç</button>
+      </div>
+      <div id="aracListe" class="liste"></div>
+    </div>
+    <div class="sekme" id="sekme-olaylar" hidden>
+      <div class="filtre">
+        <div class="segment" id="olayFiltre">
+          <button data-f="acik" class="secili">Açık</button>
+          <button data-f="tumu">Tümü</button>
+        </div>
+        <a href="/api/olaylar.csv">⬇ CSV indir</a>
+      </div>
+      <form class="soru" id="soruKutu" hidden>
+        <input id="soruInput" maxlength="300" placeholder="🤖 Asistana sor: bugün kaç panik oldu?" />
+        <button class="ana" id="soruBtn">Sor</button>
+      </form>
+      <div class="soruCevap" id="soruCevap" hidden></div>
+      <div id="olayListe" class="liste"></div>
+    </div>
   </aside>
-  <div id="harita"></div>
+  <section id="haritaAlan">
+    <div id="harita"></div>
+    <div id="detay" hidden></div>
+  </section>
 </main>
+<div id="toast"></div>
 
 <script>
 const CEVRIMDISI_MS = 20000;
+const YENI = '__yeni__';
+const HIZLI_MESAJLAR = ['Yardım yolda', 'Polis yönlendirildi', 'Sizi arıyoruz, telefona bakın', 'Güvenli bir yere geçin'];
+const ARALIKLAR = [[15 * 60e3, '15 dk'], [3600e3, '1 saat'], [6 * 3600e3, '6 saat'], [Infinity, 'Tümü']];
+const KAYNAK = { gps: 'GPS', sabit: 'Sabit konum (GPS yok)', simulasyon: 'Simülasyon', yok: 'GPS uydu arıyor', bilinmiyor: '?' };
+const DURUM_YAZI = {
+  panik: 'PANİK', acik: 'AÇIK', goruldu: 'Görüldü', cevrimici: 'Çevrimiçi', cevrimdisi: 'Çevrimdışı',
+  hic: 'Hiç bağlanmadı', kapandi: 'Kapandı', iptal: 'İptal edildi',
+};
 
-const harita = L.map('harita').setView([39.0, 35.0], 6);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19, attribution: '&copy; OpenStreetMap katkıcıları',
-}).addTo(harita);
-// alarm bandı açılıp kapanınca harita alanının boyu değişir; Leaflet'e haber ver
-new ResizeObserver(() => harita.invalidateSize()).observe(document.getElementById('harita'));
-
-const araclar = new Map();   // plaka -> arac
-const katmanlar = new Map(); // plaka -> { isaret, iz }
-let olaylar = [];
-let ilkOdak = true;
-
+const $ = s => document.querySelector(s);
 const kacis = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const saatYaz = t => new Date(t).toLocaleTimeString('tr-TR');
-const tarihYaz = t => new Date(t).toLocaleString('tr-TR');
-const KAYNAK = { gps: 'GPS', sabit: 'sabit konum (GPS yok)', simulasyon: 'simülasyon', yok: 'konum yok (GPS uydu arıyor)' };
+const tarihYaz = t => new Date(t).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+function once(t) {
+  if (!t) return 'hiç';
+  const s = Math.max(0, Math.round((Date.now() - t) / 1000));
+  if (s < 60) return s + ' sn önce';
+  if (s < 3600) return Math.floor(s / 60) + ' dk önce';
+  if (s < 86400) return Math.floor(s / 3600) + ' sa önce';
+  return tarihYaz(t);
+}
+function sureYaz(sn) {
+  const g = Math.floor(sn / 86400), sa = Math.floor(sn % 86400 / 3600), dk = Math.floor(sn % 3600 / 60);
+  return g ? `${g} g ${sa} sa` : sa ? `${sa} sa ${dk} dk` : `${dk} dk ${sn % 60} sn`;
+}
+function sinyalHtml(rssi) {
+  if (rssi == null) return '';
+  const s = rssi > -55 ? 4 : rssi > -65 ? 3 : rssi > -75 ? 2 : 1;
+  return `<span class="sinyal" title="${rssi} dBm">${[4, 6, 8, 10].map((h, i) => `<i style="height:${h}px" class="${i < s ? 'dolu' : ''}"></i>`).join('')}</span>`;
+}
+function mesafeKm(a, b) {
+  const r = Math.PI / 180;
+  const x = Math.sin((b[0] - a[0]) * r / 2) ** 2 + Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin((b[1] - a[1]) * r / 2) ** 2;
+  return 12742 * Math.asin(Math.sqrt(x));
+}
 
-function durumu(a) {
-  if (a.panikId) return 'panik';
+let toastZaman = null;
+function toast(m) {
+  const t = $('#toast');
+  t.textContent = m;
+  t.style.display = 'block';
+  clearTimeout(toastZaman);
+  toastZaman = setTimeout(() => { t.style.display = 'none'; }, 3500);
+}
+
+// ------------------------------------------------------------ operatör adı
+let operatorAdi = '';
+try { operatorAdi = localStorage.getItem('operator') || ''; } catch { /* depolama yok */ }
+$('#operator').value = operatorAdi;
+$('#operator').oninput = e => {
+  operatorAdi = e.target.value.trim();
+  try { localStorage.setItem('operator', operatorAdi); } catch { /* depolama yok */ }
+};
+
+async function api(yol, govde, yontem = 'POST') {
+  const r = await fetch(yol, {
+    method: yontem,
+    headers: { 'Content-Type': 'application/json' },
+    body: govde ? JSON.stringify({ ...govde, kim: operatorAdi }) : undefined,
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.hata || 'İstek başarısız (' + r.status + ')');
+  return j;
+}
+
+// ------------------------------------------------------------ durum
+const araclar = new Map();  // plaka -> araç (iz dahil)
+let olaylar = [];
+let secili = null;          // seçili plaka ya da YENI
+let duzenleme = false;
+let rotaAraligi = 3600e3;
+let olayFiltre = 'acik';
+let ozellikler = { asistan: false, model: null, adres: false };
+
+const acikOlayi = plaka => olaylar.findLast(o => o.plaka === plaka && (o.durum === 'acik' || o.durum === 'goruldu'));
+function aracDurumu(a) {
+  const o = acikOlayi(a.plaka);
+  if (o) return o.durum === 'acik' ? 'panik' : 'goruldu';
+  if (!a.sonGorulme) return 'hic';
   return Date.now() - a.sonGorulme > CEVRIMDISI_MS ? 'cevrimdisi' : 'cevrimici';
 }
 
-// ------------------------------------------------------------ harita
-function haritaGuncelle(a) {
-  if (a.enlem == null) return;
-  const d = durumu(a);
-  let k = katmanlar.get(a.plaka);
-  const ikon = L.divIcon({ className: 'isaret ' + d, html: `<div>${kacis(a.plaka)}</div>`, iconSize: [0, 0] });
-  if (!k) {
-    k = {
-      isaret: L.marker([a.enlem, a.boylam], { icon: ikon }).addTo(harita),
-      iz: L.polyline([], { color: '#3b6fd9', weight: 3, opacity: .6 }).addTo(harita),
-    };
-    k.isaret.on('click', () => odaklan(a.plaka));
-    katmanlar.set(a.plaka, k);
-  } else {
-    k.isaret.setLatLng([a.enlem, a.boylam]);
-    k.isaret.setIcon(ikon);
+function aracKoy(a, nokta) {
+  const iz = a.iz || araclar.get(a.plaka)?.iz || [];
+  if (nokta) {
+    const son = iz.at(-1);
+    if (son && son[0] === nokta[0] && son[1] === nokta[1]) son[2] = nokta[2];
+    else iz.push(nokta);
+    if (iz.length > 3000) iz.splice(0, iz.length - 3000);
   }
-  k.iz.setLatLngs(a.iz.map(n => [n[0], n[1]]));
-  k.isaret.setZIndexOffset(d === 'panik' ? 1000 : 0);
+  araclar.set(a.plaka, { ...a, iz });
+}
+
+// true dönerse yeni bir alarm başladı (yeni panik ya da tekrar basıldı)
+function olayKoy(o) {
+  const i = olaylar.findIndex(x => x.id === o.id);
+  const eski = i >= 0 ? olaylar[i] : null;
+  // Sunucu her değişiklikte sürümü artırır: daha düşük sürümlü kopya eskidir
+  // (ör. canlı akıştan sonra gelen istek cevabı), yok say
+  if (eski && (o.surum ?? 0) < (eski.surum ?? 0)) return false;
+  if (i >= 0) olaylar[i] = o; else olaylar.push(o);
+  if (o.durum !== 'acik') return false;
+  return !eski || eski.durum !== 'acik' || (o.gecmis.length > eski.gecmis.length && o.gecmis.at(-1).tur === 'tekrar');
+}
+
+// ------------------------------------------------------------ harita
+const harita = L.map('harita').setView([39.0, 35.0], 6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap katkıcıları' }).addTo(harita);
+new ResizeObserver(() => harita.invalidateSize()).observe($('#haritaAlan'));
+const isaretler = new Map();
+const rotaCizgisi = L.polyline([], { color: '#2f6fd6', weight: 4, opacity: .75 }).addTo(harita);
+let oynatici = null;
+
+function isaretGuncelle(a) {
+  let m = isaretler.get(a.plaka);
+  if (a.enlem == null) { if (m) { m.remove(); isaretler.delete(a.plaka); } return; }
+  const d = aracDurumu(a);
+  const sinif = `isaret ${d}${a.plaka === secili ? ' secili' : ''}`;
+  const ikon = () => L.divIcon({ className: sinif, html: `<div>${kacis(a.plaka)}</div>`, iconSize: [0, 0] });
+  if (!m) {
+    m = L.marker([a.enlem, a.boylam], { icon: ikon() }).addTo(harita);
+    m.on('click', () => sec(a.plaka));
+    m.sinif = sinif;
+    isaretler.set(a.plaka, m);
+  } else {
+    m.setLatLng([a.enlem, a.boylam]);
+    if (m.sinif !== sinif) { m.setIcon(ikon()); m.sinif = sinif; }
+  }
+  m.setZIndexOffset(d === 'panik' ? 1000 : a.plaka === secili ? 500 : 0);
 }
 
 function odaklan(plaka) {
@@ -148,132 +357,572 @@ function odaklan(plaka) {
   if (a && a.enlem != null) harita.flyTo([a.enlem, a.boylam], Math.max(harita.getZoom(), 16), { duration: .8 });
 }
 
-// ------------------------------------------------------------ listeler
-function araclariCiz() {
-  const kutu = document.getElementById('araclar');
-  const liste = [...araclar.values()].sort((x, y) => (y.panikId ? 1 : 0) - (x.panikId ? 1 : 0) || x.plaka.localeCompare(y.plaka));
-  if (!liste.length) { kutu.innerHTML = '<div class="bos">Henüz cihaz bağlanmadı.</div>'; return; }
-  kutu.innerHTML = liste.map(a => {
-    const d = durumu(a);
-    const yazi = { panik: 'PANİK', cevrimici: 'çevrimiçi', cevrimdisi: 'çevrimdışı' }[d];
-    const konum = a.enlem != null ? `${a.enlem.toFixed(5)}, ${a.boylam.toFixed(5)}` : 'konum yok';
-    return `<div class="arac ${d === 'panik' ? 'panik' : ''}" data-plaka="${kacis(a.plaka)}">
-      <div class="ust"><span class="plaka">${kacis(a.plaka)}</span><span class="durum ${d}">${yazi}</span></div>
-      <div class="alt">${konum} · ${kacis(KAYNAK[a.kaynak] || a.kaynak)}<br>son sinyal ${saatYaz(a.sonGorulme)}</div>
+function filtreliIz(a) {
+  const sinir = rotaAraligi === Infinity ? 0 : Date.now() - rotaAraligi;
+  return (a.iz || []).filter(n => n[2] >= sinir);
+}
+
+function rotaCiz() {
+  const a = araclar.get(secili);
+  const iz = a ? filtreliIz(a) : [];
+  rotaCizgisi.setLatLngs(iz.map(n => [n[0], n[1]]));
+  const el = $('#dRotaBilgi');
+  if (el && a) {
+    let km = 0;
+    for (let i = 1; i < iz.length; i++) km += mesafeKm(iz[i - 1], iz[i]);
+    el.textContent = iz.length ? `${iz.length} nokta · ${km.toFixed(2)} km yol` : 'Bu aralıkta konum kaydı yok.';
+  }
+}
+
+function oynaticiDurdur() {
+  if (!oynatici) return;
+  cancelAnimationFrame(oynatici.kare);
+  oynatici.m.remove();
+  oynatici = null;
+  const b = $('#oynatBtn');
+  if (b) b.textContent = '▶ Oynat';
+}
+
+function oynat() {
+  if (oynatici) return oynaticiDurdur();
+  const a = araclar.get(secili);
+  const iz = a ? filtreliIz(a) : [];
+  if (iz.length < 2) return toast('Bu aralıkta oynatılacak hareket yok (araç yerinde durmuş olabilir).');
+  const bas = iz[0][2], son = iz.at(-1)[2], sure = 8000, t0 = performance.now();
+  const m = L.circleMarker([iz[0][0], iz[0][1]], { radius: 8, color: '#fff', weight: 3, fillColor: '#2f6fd6', fillOpacity: 1 }).addTo(harita);
+  m.bindTooltip('', { permanent: true, direction: 'top', offset: [0, -10] }).openTooltip();
+  harita.fitBounds(rotaCizgisi.getBounds(), { padding: [50, 50] });
+  let i = 0;
+  const adim = simdi => {
+    const p = Math.min(1, (simdi - t0) / sure);
+    const hedef = bas + (son - bas) * p;
+    while (i < iz.length - 2 && iz[i + 1][2] < hedef) i++;
+    const [e1, b1, z1] = iz[i], [e2, b2, z2] = iz[i + 1];
+    const k = z2 > z1 ? Math.min(1, Math.max(0, (hedef - z1) / (z2 - z1))) : 1;
+    m.setLatLng([e1 + (e2 - e1) * k, b1 + (b2 - b1) * k]);
+    m.setTooltipContent(saatYaz(hedef));
+    if (p < 1) oynatici.kare = requestAnimationFrame(adim);
+    else oynatici.kare = setTimeout(oynaticiDurdur, 1500);
+  };
+  oynatici = { m, kare: requestAnimationFrame(adim) };
+  $('#oynatBtn').textContent = '■ Durdur';
+}
+
+// ------------------------------------------------------------ seçim + detay kartı
+function sec(plaka, haritadaGoster = true) {
+  if (secili !== plaka) { secili = plaka; duzenleme = false; detayKur(); }
+  rotaCiz();
+  ciz();
+  if (haritadaGoster && plaka !== YENI) odaklan(plaka);
+}
+
+function detayKur() {
+  const kutu = $('#detay');
+  oynaticiDurdur();
+  const yeni = secili === YENI;
+  const a = yeni ? null : araclar.get(secili);
+  if (!secili || (!yeni && !a)) { secili = null; kutu.hidden = true; rotaCiz(); return; }
+  kutu.hidden = false;
+  kutu.innerHTML = `
+    <div class="ust">
+      ${yeni ? '<strong>Yeni araç kaydı</strong>' : `<span class="plaka buyuk">${kacis(a.plaka)}</span><span class="pill" id="dDurum"></span>`}
+      <button class="kapatX" id="dKapat" title="Kapat (Esc)" ${yeni ? 'style="margin-left:auto"' : ''}>✕</button>
+    </div>
+    <div id="dBilgi"></div>
+    ${yeni ? '' : `
+      <h3>Cihaz</h3>
+      <dl class="d-grid" id="dTelemetri"></dl>
+      <h3>Cihaza komut</h3>
+      <div class="satirlar"><button id="bipBtn">🔊 Cihazı öttür</button></div>
+      <div class="satirlar hizli" style="margin-top:8px">${HIZLI_MESAJLAR.map(m => `<button data-hizli="${kacis(m)}">${kacis(m)}</button>`).join('')}</div>
+      <form class="mesaj" id="mesajForm"><input id="mesajInput" maxlength="120" placeholder="Cihaz ekranında görünecek mesaj" /><button class="ana">Gönder</button></form>
+      <div id="dKomutlar"></div>
+      <h3>Rota</h3>
+      <div class="satirlar">
+        <div class="segment" id="rotaSecim">${ARALIKLAR.map(([ms, ad]) => `<button data-ms="${ms}" class="${ms === rotaAraligi ? 'secili' : ''}">${ad}</button>`).join('')}</div>
+        <button id="oynatBtn">▶ Oynat</button>
+      </div>
+      <div class="alt" id="dRotaBilgi"></div>
+      <h3>Bu aracın olayları</h3>
+      <div id="dOlaylar"></div>`}`;
+
+  $('#dKapat').onclick = () => { secili = null; detayKur(); ciz(); };
+  bilgiCiz();
+  if (yeni) return;
+
+  const plaka = a.plaka;
+  const komut = async govde => {
+    try {
+      await api(`/api/arac/${encodeURIComponent(plaka)}/komut`, govde);
+      toast(govde.tur === 'bip' ? 'Öttürme sırada. Cihaz bir sonraki bağlantıda (en geç 5 sn) ötecek.' : 'Mesaj sırada. Cihaz bir sonraki bağlantıda alacak.');
+    } catch (e) { toast(e.message); }
+  };
+  $('#bipBtn').onclick = () => komut({ tur: 'bip' });
+  for (const b of $('#detay').querySelectorAll('[data-hizli]')) b.onclick = () => komut({ tur: 'mesaj', metin: b.dataset.hizli });
+  $('#mesajForm').onsubmit = e => {
+    e.preventDefault();
+    const metin = $('#mesajInput').value.trim();
+    if (!metin) return;
+    komut({ tur: 'mesaj', metin });
+    $('#mesajInput').value = '';
+  };
+  $('#rotaSecim').onclick = e => {
+    const b = e.target.closest('[data-ms]');
+    if (!b) return;
+    rotaAraligi = Number(b.dataset.ms);
+    for (const x of $('#rotaSecim').children) x.classList.toggle('secili', x === b);
+    oynaticiDurdur();
+    rotaCiz();
+  };
+  $('#oynatBtn').onclick = oynat;
+  $('#dOlaylar').onclick = e => {
+    const s = e.target.closest('[data-olay]');
+    if (s) olayaGit(s.dataset.olay);
+  };
+  detayGuncelle();
+  rotaCiz();
+}
+
+function bilgiCiz() {
+  const kutu = $('#dBilgi');
+  const yeni = secili === YENI;
+  const a = yeni ? { plaka: '', sahip: '', telefon: '', arac: '', not: '' } : araclar.get(secili);
+  if (!yeni && !duzenleme) {
+    kutu.innerHTML = `<div class="bilgi" style="margin-top:10px">
+      <div><b>${a.sahip ? kacis(a.sahip) : '<span class="soluk">Sahip bilgisi girilmemiş</span>'}</b></div>
+      ${a.telefon ? `<div><a href="tel:${kacis(a.telefon.replace(/\s/g, ''))}">📞 ${kacis(a.telefon)}</a></div>` : ''}
+      ${a.arac ? `<div>🚗 ${kacis(a.arac)}</div>` : ''}
+      ${a.not ? `<div class="alt">${kacis(a.not)}</div>` : ''}
+      <button id="duzenleBtn" style="margin-top:8px">Bilgileri düzenle</button>
     </div>`;
-  }).join('');
-  for (const el of kutu.querySelectorAll('.arac')) el.onclick = () => odaklan(el.dataset.plaka);
+    $('#duzenleBtn').onclick = () => { duzenleme = true; bilgiCiz(); };
+    return;
+  }
+  kutu.innerHTML = `<form class="form" id="aracForm">
+    ${yeni ? '<label>Plaka</label><input name="plaka" required maxlength="20" placeholder="34 ABC 123" />' : ''}
+    <label>Sahip / sürücü</label><input name="sahip" maxlength="60" value="${kacis(a.sahip)}" />
+    <label>Telefon</label><input name="telefon" type="tel" maxlength="30" value="${kacis(a.telefon)}" />
+    <label>Araç (marka, model, renk)</label><input name="arac" maxlength="60" value="${kacis(a.arac)}" />
+    <label>Not</label><textarea name="not" maxlength="300">${kacis(a.not)}</textarea>
+    <div class="satirlar" style="margin-top:10px">
+      <button class="ana">Kaydet</button>
+      <button type="button" id="vazgecBtn">Vazgeç</button>
+      ${yeni ? '' : '<button type="button" class="tehlike" id="silBtn" style="margin-left:auto">Aracı sil</button>'}
+    </div>
+  </form>`;
+  const f = $('#aracForm');
+  (yeni ? f.plaka : f.sahip).focus();
+  $('#vazgecBtn').onclick = () => {
+    if (yeni) { secili = null; detayKur(); } else { duzenleme = false; bilgiCiz(); }
+  };
+  f.onsubmit = async e => {
+    e.preventDefault();
+    try {
+      const r = await api('/api/arac', {
+        plaka: yeni ? f.plaka.value : a.plaka, sahip: f.sahip.value, telefon: f.telefon.value, arac: f.arac.value, not: f.not.value,
+      });
+      aracKoy(r.arac, null);
+      duzenleme = false;
+      if (yeni) { secili = r.arac.plaka; detayKur(); } else bilgiCiz();
+      ciz();
+      toast('Araç bilgileri kaydedildi.');
+    } catch (er) { toast(er.message); }
+  };
+  if (!yeni) {
+    $('#silBtn').onclick = async e => {
+      const b = e.currentTarget;
+      if (!b.dataset.onay) { b.dataset.onay = '1'; b.textContent = 'Emin misin? Tekrar bas'; return; }
+      try { await api(`/api/arac/${encodeURIComponent(a.plaka)}`, null, 'DELETE'); toast('Araç silindi.'); } catch (er) { toast(er.message); }
+    };
+  }
 }
 
-function olaylariCiz() {
-  const kutu = document.getElementById('olaylar');
-  const liste = [...olaylar].reverse().slice(0, 50);
-  if (!liste.length) { kutu.innerHTML = '<div class="bos">Olay yok.</div>'; return; }
-  kutu.innerHTML = liste.map(o => `<div class="olay ${o.onaylandi ? '' : 'acik'}">
-      <span class="plaka">${kacis(o.plaka)}</span>
-      ${o.onaylandi ? '<span class="alt" style="grid-column:auto">✓ onaylandı</span>' : `<button data-onay="${o.id}">Onayla</button>`}
-      <div class="alt">${tarihYaz(o.zaman)} · ${o.enlem != null ? `${o.enlem.toFixed(5)}, ${o.boylam.toFixed(5)}` : 'konum yok'}</div>
-    </div>`).join('');
-  for (const b of kutu.querySelectorAll('[data-onay]')) b.onclick = () => onayla(b.dataset.onay);
+// Detay kartının sık değişen kısımları (formlara ve yazılan mesaja dokunmaz)
+function detayGuncelle() {
+  if (!secili || secili === YENI) return;
+  const a = araclar.get(secili);
+  if (!a) return;
+  const d = aracDurumu(a);
+  const p = $('#dDurum');
+  if (p) { p.className = 'pill ' + d; p.textContent = DURUM_YAZI[d]; }
+  const t = $('#dTelemetri');
+  if (t) t.innerHTML = `
+    <dt>Son sinyal</dt><dd>${a.sonGorulme ? `${once(a.sonGorulme)} · ${saatYaz(a.sonGorulme)}` : 'Henüz bağlanmadı'}</dd>
+    <dt>Konum</dt><dd>${a.enlem != null ? `${a.enlem.toFixed(5)}, ${a.boylam.toFixed(5)} · <a href="https://www.google.com/maps?q=${a.enlem},${a.boylam}" target="_blank" rel="noopener">Google Haritalar</a>` : '–'}</dd>
+    ${ozellikler.adres && a.enlem != null ? `<dt>Adres</dt><dd>${kacis(adresGetir(a.enlem, a.boylam) ?? '…')}</dd>` : ''}
+    <dt>Kaynak</dt><dd>${kacis(KAYNAK[a.kaynak] ?? '–')}</dd>
+    <dt>Hız</dt><dd>${a.hiz != null ? a.hiz.toFixed(1) + ' km/s' : '–'}</dd>
+    <dt>Sinyal</dt><dd>${a.rssi != null ? `${sinyalHtml(a.rssi)} ${a.rssi} dBm` : '–'}</dd>
+    <dt>Cihaz</dt><dd>${a.surum ? 'v' + kacis(a.surum) : '–'}${a.sure != null ? ` · ${sureYaz(a.sure)} açık` : ''}</dd>`;
+  const k = $('#dKomutlar');
+  if (k) k.innerHTML = (a.komutlar || []).slice(-4).reverse().map(c => `<div class="komut">
+      <span>${saatYaz(c.zaman)}</span>
+      <span class="metin">${c.tur === 'bip' ? '🔊 Öttürme' : '✉ ' + kacis(c.metin)}</span>
+      <span class="${c.durum}">${c.durum === 'iletildi' ? '✓ iletildi' : '⏳ bekliyor'}</span></div>`).join('');
+  const o = $('#dOlaylar');
+  if (o) {
+    const liste = olaylar.filter(x => x.plaka === a.plaka).slice(-5).reverse();
+    o.innerHTML = liste.length
+      ? liste.map(x => `<div class="mini-olay" data-olay="${x.id}"><span class="pill ${x.durum}">${DURUM_YAZI[x.durum]}</span><span>${tarihYaz(x.zaman)}</span><span class="soluk">${x.gecmis.length} kayıt</span></div>`).join('')
+      : '<div class="alt">Bu araçla ilgili olay yok.</div>';
+  }
 }
 
-// ------------------------------------------------------------ alarm
+// Adresi sunucudan iste; gelene kadar null döner, gelince detay kartı yeniden çizilir
+const adresler = new Map();
+function adresGetir(enlem, boylam) {
+  const k = `${enlem.toFixed(4)},${boylam.toFixed(4)}`;
+  if (adresler.has(k)) return adresler.get(k);
+  adresler.set(k, null);
+  fetch(`/api/adres?enlem=${enlem}&boylam=${boylam}`).then(r => r.json())
+    .then(j => { adresler.set(k, j.adres || 'adres bulunamadı'); ciz(); })
+    .catch(() => adresler.delete(k));
+  return null;
+}
+
+// ------------------------------------------------------------ listeler
+function aracListesiCiz() {
+  const q = $('#ara').value.trim().toLocaleLowerCase('tr');
+  const sira = { panik: 0, goruldu: 1, cevrimici: 2, cevrimdisi: 3, hic: 4 };
+  const liste = [...araclar.values()]
+    .filter(a => !q || `${a.plaka} ${a.sahip} ${a.arac}`.toLocaleLowerCase('tr').includes(q))
+    .sort((x, y) => sira[aracDurumu(x)] - sira[aracDurumu(y)] || x.plaka.localeCompare(y.plaka, 'tr'));
+  $('#aracListe').innerHTML = liste.length ? liste.map(a => {
+    const d = aracDurumu(a);
+    const parcalar = [
+      a.sonGorulme ? once(a.sonGorulme) : 'henüz sinyal yok',
+      a.rssi != null ? sinyalHtml(a.rssi) : '',
+      a.hiz != null && a.sonGorulme ? a.hiz.toFixed(0) + ' km/s' : '',
+      a.kaynak ? kacis(KAYNAK[a.kaynak] ?? a.kaynak) : '',
+    ].filter(Boolean);
+    return `<div class="kart arac ${d}${a.plaka === secili ? ' secili' : ''}" data-plaka="${kacis(a.plaka)}">
+      <div class="ust"><span class="plaka">${kacis(a.plaka)}</span><span class="ad">${kacis(a.sahip)}</span><span class="pill ${d}">${DURUM_YAZI[d]}</span></div>
+      <div class="alt">${parcalar.join(' · ')}</div>
+    </div>`;
+  }).join('') : `<div class="bos">${araclar.size ? 'Eşleşen araç yok.' : 'Henüz araç yok. Cihaz bağlanınca burada görünür; "+ Araç" ile önceden de kaydedebilirsin.'}</div>`;
+}
+$('#aracListe').onclick = e => {
+  const k = e.target.closest('[data-plaka]');
+  if (k) sec(k.dataset.plaka);
+};
+$('#ara').oninput = () => aracListesiCiz();
+$('#yeniAracBtn').onclick = () => sec(YENI, false);
+
+// panik ile "Gördüm" arasındaki süre (ms)
+function tepkiSuresi(o) {
+  const g = o.gecmis.find(x => x.tur === 'goruldu');
+  return g ? g.zaman - o.zaman : null;
+}
+function sureKisa(ms) {
+  const s = Math.round(ms / 1000);
+  return s < 60 ? `${s} sn` : `${Math.floor(s / 60)} dk ${s % 60} sn`;
+}
+
+function asistanBolumu(o, acik) {
+  if (!ozellikler.asistan && !o.asistan) return '';
+  const yenile = ozellikler.asistan && o.asistanDurumu !== 'calisiyor'
+    ? `<button data-islem="asistan" data-id="${o.id}">${o.asistan ? 'Yenile' : 'Öneri al'}</button>` : '';
+  let govde = '';
+  if (o.asistanDurumu === 'calisiyor') govde = '<div class="yukleniyor">Durum değerlendiriliyor</div>';
+  else if (o.asistanDurumu === 'hata') govde = `<div class="hata">${kacis(o.asistanHata)}</div>`;
+  if (o.asistan && o.asistanDurumu !== 'calisiyor') {
+    govde += `<div>${kacis(o.asistan.ozet)}</div>`;
+    if (o.asistan.oneriler.length) govde += `<ol>${o.asistan.oneriler.map(s => `<li>${kacis(s)}</li>`).join('')}</ol>`;
+    if (acik && o.asistan.mesajlar.length) {
+      govde += `<div class="alt">Sürücüye gönder (araçtaki ekrana):</div><div class="mesajlar">${o.asistan.mesajlar
+        .map(m => `<button data-islem="oneriMesaj" data-plaka="${kacis(o.plaka)}" data-metin="${kacis(m)}">✉ ${kacis(m)}</button>`).join('')}</div>`;
+    }
+    govde += `<div class="uyari">Yapay zekâ önerisidir, kararı sen verirsin. ${saatYaz(o.asistan.zaman)}</div>`;
+  } else if (!govde) {
+    govde = '<div class="soluk">Asistan bu olay için henüz öneri vermedi.</div>';
+  }
+  return `<div class="asistan"><h4>🤖 Asistan ${yenile}</h4>${govde}</div>`;
+}
+
+function raporBolumu(o, acik, acikDetaylar) {
+  if (acik || (!ozellikler.asistan && !o.rapor)) return '';
+  if (o.raporDurumu === 'calisiyor') return '<div class="asistan"><div class="yukleniyor">📝 Rapor yazılıyor</div></div>';
+  const hata = o.raporDurumu === 'hata' ? `<div class="hata">${kacis(o.raporHata)}</div>` : '';
+  if (!o.rapor) return `<div class="satirlar">${hata}<button data-islem="rapor" data-id="${o.id}">📝 Olay raporu oluştur</button></div>`;
+  return `<details data-id="rapor-${o.id}" ${acikDetaylar.has('rapor-' + o.id) ? 'open' : ''}><summary>📝 Olay raporu</summary>
+    <div class="rapor" id="rapor-${o.id}">${kacis(o.rapor.metin)}</div>
+    <div class="satirlar" style="margin-top:6px"><button data-islem="kopyala" data-id="${o.id}">Kopyala</button>
+    ${ozellikler.asistan ? `<button data-islem="rapor" data-id="${o.id}">Yeniden yaz</button>` : ''}</div></details>`;
+}
+
+function olayKarti(o, gecmisAcik) {
+  const a = araclar.get(o.plaka) || {};
+  const acik = o.durum === 'acik' || o.durum === 'goruldu';
+  const cizelge = `<ul class="zamanCizelgesi">${o.gecmis.map(g => `<li class="${g.tur}"><time>${saatYaz(g.zaman)}</time>${kacis(g.metin)}${g.kim ? ` <span class="soluk">· ${kacis(g.kim)}</span>` : ''}</li>`).join('')}</ul>`;
+  const tepki = tepkiSuresi(o);
+  return `<div class="kart olay ${o.durum}" id="olay-${o.id}">
+    <div class="ust"><span class="plaka">${kacis(o.plaka)}</span><span class="ad">${kacis(a.sahip)}</span>${o.kopuk && acik ? '<span class="pill kopuk">📡 Bağlantı koptu</span>' : ''}<span class="pill ${o.durum}">${DURUM_YAZI[o.durum]}</span></div>
+    <div class="alt"><span data-zaman="${o.zaman}">${once(o.zaman)}</span> · ${tarihYaz(o.zaman)}${tepki != null ? ` · tepki ${sureKisa(tepki)}` : ''}${a.telefon ? ` · <a href="tel:${kacis(a.telefon.replace(/\s/g, ''))}">📞 ${kacis(a.telefon)}</a>` : ''}</div>
+    ${o.adres ? `<div class="adres">📍 ${kacis(o.adres)}</div>` : ''}
+    ${asistanBolumu(o, acik)}
+    ${acik ? cizelge : `<details data-id="${o.id}" ${gecmisAcik.has(o.id) ? 'open' : ''}><summary>Geçmiş (${o.gecmis.length} kayıt)</summary>${cizelge}</details>`}
+    ${raporBolumu(o, acik, gecmisAcik)}
+    ${acik ? `<textarea data-id="${o.id}" maxlength="300" placeholder="Not (isteğe bağlı): ne yaptın, kimi aradın…"></textarea>` : ''}
+    <div class="satirlar">
+      ${o.durum === 'acik' ? `<button class="tehlike" data-islem="gor" data-id="${o.id}">Gördüm</button>` : ''}
+      ${acik ? `<button data-islem="not" data-id="${o.id}">Not ekle</button><button data-islem="kapat" data-id="${o.id}">Olayı kapat</button>` : ''}
+      <button data-islem="git" data-plaka="${kacis(o.plaka)}" style="margin-left:auto">Araca git</button>
+    </div>
+  </div>`;
+}
+
+// Listeyi yeniden çizerken yazılmakta olan notları ve açık "Geçmiş"leri korur
+function olayListesiCiz() {
+  const kutu = $('#olayListe');
+  const notlar = {};
+  let odak = null;
+  for (const t of kutu.querySelectorAll('textarea[data-id]')) {
+    notlar[t.dataset.id] = t.value;
+    if (document.activeElement === t) odak = [t.dataset.id, t.selectionStart];
+  }
+  const acikGecmis = new Set([...kutu.querySelectorAll('details[open]')].map(d => d.dataset.id));
+  const liste = [...olaylar].reverse().filter(o => olayFiltre === 'tumu' || o.durum === 'acik' || o.durum === 'goruldu');
+  kutu.innerHTML = liste.length
+    ? liste.slice(0, 150).map(o => olayKarti(o, acikGecmis)).join('')
+    : `<div class="bos">${olayFiltre === 'tumu' ? 'Henüz olay yok.' : 'Açık olay yok.'}</div>`;
+  for (const t of kutu.querySelectorAll('textarea[data-id]')) if (notlar[t.dataset.id]) t.value = notlar[t.dataset.id];
+  if (odak) {
+    const t = kutu.querySelector(`textarea[data-id="${odak[0]}"]`);
+    if (t) { t.focus(); t.setSelectionRange(odak[1], odak[1]); }
+  }
+}
+$('#olayListe').onclick = async e => {
+  const b = e.target.closest('button[data-islem]');
+  if (!b) return;
+  if (b.dataset.islem === 'git') return sec(b.dataset.plaka);
+  if (b.dataset.islem === 'oneriMesaj') {
+    b.disabled = true;
+    try {
+      await api(`/api/arac/${encodeURIComponent(b.dataset.plaka)}/komut`, { tur: 'mesaj', metin: b.dataset.metin });
+      toast('Mesaj sırada; cihaz bir sonraki bağlantıda gösterecek.');
+    } catch (er) { toast(er.message); b.disabled = false; }
+    return;
+  }
+  if (b.dataset.islem === 'kopyala') {
+    const metin = $(`#rapor-${b.dataset.id}`)?.textContent || '';
+    try { await navigator.clipboard.writeText(metin); toast('Rapor panoya kopyalandı.'); } catch { toast('Kopyalanamadı; metni seçip kopyala.'); }
+    return;
+  }
+  if (b.dataset.islem === 'asistan' || b.dataset.islem === 'rapor') {
+    b.disabled = true;
+    try { olayKoy((await api(`/api/olay/${b.dataset.id}/${b.dataset.islem}`, {})).olay); } catch (er) { toast(er.message); b.disabled = false; }
+    return;
+  }
+  const id = b.dataset.id;
+  const alan = () => $(`#olayListe textarea[data-id="${id}"]`);
+  const not = alan()?.value.trim() || '';
+  if (b.dataset.islem === 'not' && !not) return toast('Önce notu yaz.');
+  b.disabled = true;
+  try {
+    const r = await api(`/api/olay/${id}/${b.dataset.islem}`, { not });
+    if (alan()) alan().value = '';
+    olayKoy(r.olay);
+    olayListesiCiz();
+    ciz();
+  } catch (er) { toast(er.message); b.disabled = false; }
+};
+$('#olayFiltre').onclick = e => {
+  const b = e.target.closest('[data-f]');
+  if (!b) return;
+  olayFiltre = b.dataset.f;
+  for (const x of $('#olayFiltre').children) x.classList.toggle('secili', x === b);
+  olayListesiCiz();
+};
+
+$('#soruKutu').onsubmit = async e => {
+  e.preventDefault();
+  const soru = $('#soruInput').value.trim();
+  if (!soru) return;
+  const kutu = $('#soruCevap'), btn = $('#soruBtn');
+  kutu.hidden = false;
+  kutu.className = 'soruCevap yukleniyor';
+  kutu.textContent = 'Asistan düşünüyor';
+  btn.disabled = true;
+  try {
+    const r = await api('/api/asistan/soru', { soru });
+    kutu.className = 'soruCevap';
+    kutu.textContent = '🤖 ' + r.cevap;
+  } catch (er) {
+    kutu.className = 'soruCevap';
+    kutu.textContent = '⚠ ' + er.message;
+  }
+  btn.disabled = false;
+};
+
+function sekmeAc(ad) {
+  for (const b of document.querySelectorAll('.sekmeler button')) b.classList.toggle('secili', b.dataset.sekme === ad);
+  $('#sekme-araclar').hidden = ad !== 'araclar';
+  $('#sekme-olaylar').hidden = ad !== 'olaylar';
+}
+for (const b of document.querySelectorAll('.sekmeler button')) b.onclick = () => sekmeAc(b.dataset.sekme);
+
+function olayaGit(id) {
+  const o = olaylar.find(x => x.id === id);
+  if (!o) return;
+  if (olayFiltre === 'acik' && o.durum !== 'acik' && o.durum !== 'goruldu') $('#olayFiltre [data-f="tumu"]').click();
+  sekmeAc('olaylar');
+  const el = document.getElementById('olay-' + id);
+  if (el) {
+    el.querySelector('details')?.setAttribute('open', '');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+// ------------------------------------------------------------ üst özet + alarm
+function ozetCiz() {
+  const liste = [...araclar.values()];
+  const cevrimici = liste.filter(a => ['cevrimici', 'panik', 'goruldu'].includes(aracDurumu(a)) && Date.now() - a.sonGorulme <= CEVRIMDISI_MS).length;
+  const acik = olaylar.filter(o => o.durum === 'acik' || o.durum === 'goruldu').length;
+  const tepkiler = olaylar.map(tepkiSuresi).filter(t => t != null).slice(-20);
+  $('#ozet').innerHTML = `<span class="cip">Araç <b>${liste.length}</b></span><span class="cip">Çevrimiçi <b>${cevrimici}</b></span>`
+    + `<span class="cip ${acik ? 'kirmizi' : ''}">Açık olay <b>${acik}</b></span>`
+    + (tepkiler.length ? `<span class="cip" title="Son ${tepkiler.length} olayda panik ile 'Gördüm' arası">Ort. tepki <b>${sureKisa(tepkiler.reduce((x, y) => x + y, 0) / tepkiler.length)}</b></span>` : '')
+    + (ozellikler.asistan ? `<span class="cip mor" title="Gemini: ${kacis(ozellikler.model)}">🤖 <b>Asistan açık</b></span>` : '');
+  $('#aracSayi').textContent = liste.length;
+  $('#olaySayi').textContent = acik;
+  $('#olaySayi').className = acik ? 'kirmizi' : '';
+}
+
 let sesAcik = false, ses = null, alarmZamanlayici = null;
-
-document.getElementById('sesBtn').onclick = async () => {
+$('#sesBtn').onclick = async () => {
   ses ??= new AudioContext();
   await ses.resume();
   sesAcik = true;
-  document.getElementById('sesBtn').textContent = '🔔 Alarm sesi açık';
+  $('#sesBtn').textContent = '🔔 Alarm sesi açık';
   if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
   bip(880, .15);
 };
-
 function bip(frekans, sure) {
   if (!sesAcik || !ses) return;
   const o = ses.createOscillator(), g = ses.createGain();
-  o.type = 'square'; o.frequency.value = frekans;
+  o.type = 'square';
+  o.frequency.value = frekans;
   g.gain.setValueAtTime(.08, ses.currentTime);
   g.gain.exponentialRampToValueAtTime(.0001, ses.currentTime + sure);
   o.connect(g).connect(ses.destination);
-  o.start(); o.stop(ses.currentTime + sure);
+  o.start();
+  o.stop(ses.currentTime + sure);
 }
 
-function alarmGuncelle() {
-  const acik = olaylar.filter(o => !o.onaylandi);
-  const kutu = document.getElementById('alarm');
+function alarmCiz() {
+  const acik = olaylar.filter(o => o.durum === 'acik');
+  const kutu = $('#alarm');
   if (!acik.length) {
     kutu.classList.remove('var');
-    clearInterval(alarmZamanlayici); alarmZamanlayici = null;
+    clearInterval(alarmZamanlayici);
+    alarmZamanlayici = null;
     document.title = 'Panik Paneli';
     return;
   }
-  const son = acik[acik.length - 1];
-  document.getElementById('alarmMetin').textContent =
-    `${son.plaka} · ${saatYaz(son.zaman)}` + (acik.length > 1 ? ` (+${acik.length - 1} açık olay)` : '');
-  document.getElementById('alarmGoster').onclick = () => odaklan(son.plaka);
-  document.getElementById('alarmOnayla').onclick = () => onayla(son.id);
+  const son = acik.at(-1);
+  const a = araclar.get(son.plaka) || {};
+  $('#alarmMetin').innerHTML = `<span class="plaka">${kacis(son.plaka)}</span> ${kacis(a.sahip || '')}`
+    + (a.telefon ? ` · <a href="tel:${kacis(a.telefon.replace(/\s/g, ''))}">📞 ${kacis(a.telefon)}</a>` : '')
+    + (son.adres ? ` · 📍 ${kacis(son.adres)}` : '')
+    + ` · ${saatYaz(son.zaman)} (${once(son.zaman)})` + (acik.length > 1 ? ` · +${acik.length - 1} açık panik daha` : '');
+  $('#alarmGoster').onclick = () => sec(son.plaka);
+  $('#alarmGor').onclick = async () => {
+    try { olayKoy((await api(`/api/olay/${son.id}/gor`, {})).olay); olayListesiCiz(); ciz(); } catch (e) { toast(e.message); }
+  };
   kutu.classList.add('var');
   document.title = '🚨 PANİK – ' + son.plaka;
-  if (!alarmZamanlayici) {
-    alarmZamanlayici = setInterval(() => { bip(1400, .18); setTimeout(() => bip(1000, .18), 220); }, 900);
-  }
+  if (!alarmZamanlayici) alarmZamanlayici = setInterval(() => { bip(1400, .18); setTimeout(() => bip(1000, .18), 220); }, 900);
 }
 
-function bildirimGoster(o) {
+function yeniAlarm(o) {
+  const a = araclar.get(o.plaka) || {};
   if ('Notification' in window && Notification.permission === 'granted') {
     const n = new Notification('🚨 PANİK: ' + o.plaka, {
-      body: `${saatYaz(o.zaman)} · ${o.enlem != null ? o.enlem.toFixed(5) + ', ' + o.boylam.toFixed(5) : 'konum yok'}`,
+      body: [a.sahip, a.telefon, saatYaz(Date.now())].filter(Boolean).join(' · '),
       requireInteraction: true, tag: o.id,
     });
-    n.onclick = () => { window.focus(); odaklan(o.plaka); };
+    n.onclick = () => { window.focus(); sec(o.plaka); };
   }
+  // operatör bir formu doldurmuyorsa paniği yapan aracı aç
+  if (!duzenleme) sec(o.plaka);
+  else odaklan(o.plaka);
 }
 
-async function onayla(id) {
-  await fetch(`/api/olay/${id}/onayla`, { method: 'POST' });
+// ------------------------------------------------------------ çizim döngüsü
+let cizimBekliyor = false;
+function ciz() {
+  if (cizimBekliyor) return;
+  cizimBekliyor = true;
+  requestAnimationFrame(() => {
+    cizimBekliyor = false;
+    for (const a of araclar.values()) isaretGuncelle(a);
+    aracListesiCiz();
+    ozetCiz();
+    alarmCiz();
+    detayGuncelle();
+  });
 }
+setInterval(() => {
+  for (const el of document.querySelectorAll('[data-zaman]')) el.textContent = once(Number(el.dataset.zaman));
+  ciz();
+}, 1000);
+addEventListener('keydown', e => {
+  if (e.key === 'Escape' && secili && !e.target.closest('input, textarea')) { secili = null; detayKur(); ciz(); }
+});
 
 // ------------------------------------------------------------ veri akışı
-function aracKoy(a) {
-  araclar.set(a.plaka, a);
-  haritaGuncelle(a);
-  if (ilkOdak && a.enlem != null) { ilkOdak = false; harita.setView([a.enlem, a.boylam], 15); }
-}
-
+let ilkYukleme = true;
 async function yukle() {
   const d = await (await fetch('/api/durum')).json();
-  for (const a of d.araclar) aracKoy(a);
+  araclar.clear();
+  for (const a of d.araclar) araclar.set(a.plaka, a);
+  for (const [p, m] of isaretler) if (!araclar.has(p)) { m.remove(); isaretler.delete(p); }
   olaylar = d.olaylar;
-  araclariCiz(); olaylariCiz(); alarmGuncelle();
+  ozellikler = d.ozellikler || ozellikler;
+  $('#soruKutu').hidden = !ozellikler.asistan;
+  if (ilkYukleme) {
+    ilkYukleme = false;
+    const noktalar = d.araclar.filter(a => a.enlem != null).map(a => [a.enlem, a.boylam]);
+    if (noktalar.length === 1) harita.setView(noktalar[0], 15);
+    else if (noktalar.length > 1) harita.fitBounds(noktalar, { padding: [60, 60], maxZoom: 15 });
+    if (olaylar.some(o => o.durum === 'acik')) sekmeAc('olaylar');
+  }
+  if (secili && secili !== YENI && !araclar.has(secili)) secili = null;
+  if (secili && !duzenleme) detayKur();
+  olayListesiCiz();
+  ciz();
 }
 
 function akisiBaslat() {
   const akis = new EventSource('/api/akis');
-  const etiket = document.getElementById('baglanti');
-  akis.onopen = () => { etiket.textContent = 'Sunucuya bağlı'; etiket.className = 'acik'; yukle(); };
+  const etiket = $('#baglanti');
+  akis.onopen = () => { etiket.textContent = 'Sunucuya bağlı'; etiket.className = 'acik'; yukle().catch(e => toast(e.message)); };
   akis.onerror = () => { etiket.textContent = 'Sunucu bağlantısı yok, tekrar deneniyor…'; etiket.className = ''; };
-  akis.addEventListener('konum', e => { aracKoy(JSON.parse(e.data)); araclariCiz(); });
-  akis.addEventListener('panik', e => {
-    const { olay, arac } = JSON.parse(e.data);
-    aracKoy(arac);
-    olaylar.push(olay);
-    araclariCiz(); olaylariCiz(); alarmGuncelle();
-    odaklan(arac.plaka);
-    bildirimGoster(olay);
+  akis.addEventListener('arac', e => {
+    const { arac, nokta } = JSON.parse(e.data);
+    aracKoy(arac, nokta);
+    if (arac.plaka === secili && !oynatici) rotaCiz();
+    ciz();
   });
-  akis.addEventListener('onay', e => {
-    const { olay, arac } = JSON.parse(e.data);
-    const i = olaylar.findIndex(o => o.id === olay.id);
-    if (i >= 0) olaylar[i] = olay; else olaylar.push(olay);
-    if (arac) aracKoy(arac);
-    araclariCiz(); olaylariCiz(); alarmGuncelle();
+  akis.addEventListener('olay', e => {
+    const o = JSON.parse(e.data);
+    const eski = olaylar.find(x => x.id === o.id);
+    const yeniKopma = o.kopuk && !(eski && eski.kopuk) && (o.durum === 'acik' || o.durum === 'goruldu');
+    const alarm = olayKoy(o);
+    olayListesiCiz();
+    ciz();
+    if (alarm) yeniAlarm(o);
+    else if (yeniKopma) { toast(`📡 ${o.plaka}: panik sürerken cihazla bağlantı koptu!`); bip(600, .4); }
+  });
+  akis.addEventListener('arac-sil', e => {
+    const { plaka } = JSON.parse(e.data);
+    araclar.delete(plaka);
+    isaretler.get(plaka)?.remove();
+    isaretler.delete(plaka);
+    if (secili === plaka) { secili = null; detayKur(); }
+    ciz();
   });
 }
-
-// çevrimdışı durumunu düzenli yenile
-setInterval(() => { for (const a of araclar.values()) haritaGuncelle(a); araclariCiz(); }, 5000);
-
 akisiBaslat();
 </script>
 </body>

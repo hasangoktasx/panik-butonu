@@ -50,7 +50,23 @@
   #seri .kirmizi { color: #ff8a80; }
   .kontroller { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
   .kontroller button { font: inherit; font-weight: 600; border-radius: 8px; padding: 8px 12px; cursor: pointer; border: 1px solid var(--cizgi); background: #fff; }
-  .kontroller .panik { background: #d93025; color: #fff; border-color: #a1170f; }
+  .kontroller .panik { background: #d93025; color: #fff; border-color: #a1170f; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .kontroller .panik:active { transform: translateY(1px); background: #a1170f; }
+
+  /* operatör paneli canlandırması */
+  .op { border: 1px solid var(--cizgi); border-radius: 10px; padding: 10px 12px; margin: 10px 0; background: #fff; font-size: 14px; }
+  .op-ust { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--soluk); font-weight: 700; margin-bottom: 6px; }
+  .op-ust span { text-transform: none; letter-spacing: 0; font-weight: 400; }
+  .op-bos { color: var(--soluk); }
+  .op-olay { padding: 6px 8px; border-radius: 7px; background: #f1e9db; }
+  .op-olay.acik { background: #d93025; color: #fff; animation: opYanip 1s infinite; }
+  .op-olay.goruldu { background: #fbe6c2; color: #7a4a00; }
+  .op-olay .plaka { font: 700 12px ui-monospace, Consolas, monospace; background: #fff; color: #2b2520; border: 2px solid #2b2520; border-radius: 4px; padding: 0 5px; }
+  @keyframes opYanip { 50% { background: #a1170f; } }
+  .op-dugmeler { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .op-dugmeler button { font: inherit; font-size: 13px; border-radius: 7px; padding: 5px 9px; cursor: pointer; border: 1px solid var(--cizgi); background: #fff; }
+  .op-dugmeler .tehlike { background: #d93025; color: #fff; border-color: #a1170f; font-weight: 700; }
+  .op-not { font-size: 12.5px; color: var(--soluk); margin-top: 6px; }
 
   .alt { display: flex; align-items: center; gap: 10px; padding: 12px 22px; border-top: 1px solid var(--cizgi); }
   .alt button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 9px; border: 1px solid var(--cizgi); background: #fff; cursor: pointer; }
