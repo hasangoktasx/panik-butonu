@@ -60,7 +60,7 @@ function koordinat(deger, sinir) {
 
 const metin = (deger, sinir) => (typeof deger === 'string' ? deger.trim().slice(0, sinir) : '');
 
-// OLED ekranda Türkçe harf yok: mesajları ASCII'ye çevir
+// Cihaza giden mesajlarda Türkçe harf olmasın: ASCII'ye çevir
 const TR = { ç: 'c', ğ: 'g', ı: 'i', İ: 'I', ö: 'o', ş: 's', ü: 'u', Ç: 'C', Ğ: 'G', Ö: 'O', Ş: 'S', Ü: 'U' };
 const asciiYap = s => s.replace(/[çğıİöşüÇĞÖŞÜ]/g, h => TR[h]).replace(/[^\x20-\x7E]/g, '').trim();
 

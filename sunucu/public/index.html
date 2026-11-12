@@ -435,7 +435,7 @@ function detayKur() {
       <h3>Cihaza komut</h3>
       <div class="satirlar"><button id="bipBtn">🔊 Cihazı öttür</button></div>
       <div class="satirlar hizli" style="margin-top:8px">${HIZLI_MESAJLAR.map(m => `<button data-hizli="${kacis(m)}">${kacis(m)}</button>`).join('')}</div>
-      <form class="mesaj" id="mesajForm"><input id="mesajInput" maxlength="120" placeholder="Cihaz ekranında görünecek mesaj" /><button class="ana">Gönder</button></form>
+      <form class="mesaj" id="mesajForm"><input id="mesajInput" maxlength="120" placeholder="Cihaza kısa mesaj (seri monitörde görünür)" /><button class="ana">Gönder</button></form>
       <div id="dKomutlar"></div>
       <h3>Rota</h3>
       <div class="satirlar">
@@ -629,7 +629,7 @@ function asistanBolumu(o, acik) {
     govde += `<div>${kacis(o.asistan.ozet)}</div>`;
     if (o.asistan.oneriler.length) govde += `<ol>${o.asistan.oneriler.map(s => `<li>${kacis(s)}</li>`).join('')}</ol>`;
     if (acik && o.asistan.mesajlar.length) {
-      govde += `<div class="alt">Sürücüye gönder (araçtaki ekrana):</div><div class="mesajlar">${o.asistan.mesajlar
+      govde += `<div class="alt">Sürücüye gönder:</div><div class="mesajlar">${o.asistan.mesajlar
         .map(m => `<button data-islem="oneriMesaj" data-plaka="${kacis(o.plaka)}" data-metin="${kacis(m)}">✉ ${kacis(m)}</button>`).join('')}</div>`;
     }
     govde += `<div class="uyari">Yapay zekâ önerisidir, kararı sen verirsin. ${saatYaz(o.asistan.zaman)}</div>`;

@@ -2,7 +2,7 @@
 
 Araca takılan bir panik butonu. Butona basınca ESP32 Wi-Fi üzerinden **plaka + konum** gönderir. Bilgisayardaki panelde alarm çalar ve harita araca odaklanır. Her 5 saniyede bir konum da gider, yani araç canlı izlenir.
 
-**İki yönlü çalışır:** panel "Gördüm" deyince araçtaki OLED ekranda **YARDIM GELIYOR** yazar. Panel ekrana mesaj yazabilir ve cihazı uzaktan öttürebilir. Yanlış alarm durumunda butonu 3 saniye basılı tutmak paniği iptal eder.
+**İki yönlü çalışır:** panel "Gördüm" deyince araçtaki sarı LED sürekli yanar ve buzzer özel bir bip çalar. Panel cihazı uzaktan öttürebilir ve kısa mesaj gönderebilir. Yanlış alarm durumunda butonu 3 saniye basılı tutmak paniği iptal eder.
 
 **3D kurulum rehberi (tarayıcıda aç):** https://hasangoktasx.github.io/panik-butonu/
 
@@ -18,10 +18,10 @@ sunucu/public/rehber/                  3D adım adım kurulum rehberi
 
 | Cihaz (ESP32) | Panel |
 |---|---|
-| OLED ekranda durum: HAZIR, PANIK!, ILETILDI, YARDIM GELIYOR | Canlı harita, araç listesi (çevrimiçi / çevrimdışı / panik) |
+| LED ve bip desenleriyle durum: gönderiliyor, iletildi, yardım geliyor | Canlı harita, araç listesi (çevrimiçi / çevrimdışı / panik) |
 | Panik gönderilemezse 2 sn'de bir tekrar dener | Alarm sesi, tarayıcı bildirimi, kırmızı alarm bandı |
 | 3 sn basılı tut: yanlış alarm iptali | Olay zaman çizelgesi: panik, görüldü, mesaj, not, kapandı |
-| Panelin mesajını ekranda gösterir, "öttür" komutuyla öter | Araç kaydı: sahip, telefon (tıkla-ara), araç bilgisi |
+| Panelin mesajında uzun bip çalar, "öttür" komutuyla öter | Araç kaydı: sahip, telefon (tıkla-ara), araç bilgisi |
 | Kurulum modu: kodu değiştirmeden Wi-Fi / sunucu / plaka girilir | Cihaza mesaj gönderme, cihazı öttürme |
 | Wi-Fi sinyal gücü, sürüm ve çalışma süresi gönderir | Rota geçmişi (15 dk / 1 sa / 6 sa / tümü) ve oynatma |
 | GPS takılınca gerçek konum ve hız | Olayları CSV olarak indirme (Excel'de açılır) |
@@ -35,7 +35,7 @@ npm start
 
 - Panel: http://localhost:3000/
 - 3D rehber: http://localhost:3000/rehber/
-- Kartın yokken denemek için ikinci bir terminalde `npm run sim` çalıştır. Sahte araçlardan biri 20. saniyede panik yapar. Panelden "Gördüm" deyip mesaj gönderebilirsin; simülatör, cihazın ekranında ne göreceğini terminale yazar.
+- Kartın yokken denemek için ikinci bir terminalde `npm run sim` çalıştır. Sahte araçlardan biri 20. saniyede panik yapar. Panelden "Gördüm" deyip mesaj gönderebilirsin; simülatör, cihazın ne aldığını terminale yazar.
 
 Sunucu açılınca ekrana `http://192.168.x.x:3000` gibi bir adres yazar. Cihazın kurulum sayfasında bu adresi kullan.
 
@@ -43,9 +43,9 @@ Veriler (araç kayıtları, rotalar, olaylar) `sunucu/veri/durum.json` dosyasın
 
 ## Cihazı kurma
 
-1. Arduino IDE'de **esp32** kart paketini ve **Adafruit SSD1306** kütüphanesini kur (rehberin 10. adımı).
+1. Arduino IDE'de **esp32** kart paketini kur. Ek kütüphane gerekmez.
 2. `panik_buton.ino` dosyasını yükle. Kodda bir şey değiştirmen gerekmez.
-3. İlk açılışta ekranda **KURULUM MODU** yazar. Telefonla `PANIK-xxxx` Wi-Fi ağına bağlan. Açılan sayfaya (açılmazsa `192.168.4.1`) Wi-Fi adı ve şifresini, sunucu adresini ve plakayı gir.
+3. İlk açılışta sarı ve yeşil LED sırayla yanıp söner: cihaz **kurulum modunda**. Telefonla `PANIK-xxxx` Wi-Fi ağına bağlan. Açılan sayfaya (açılmazsa `192.168.4.1`) Wi-Fi adı ve şifresini, sunucu adresini ve plakayı gir.
 4. Ayarları sonra değiştirmek için butona basılı tutarken kartın **EN** tuşuna bas ve butonu 2 sn daha bırakma.
 
 İstersen ayarları kodun en üstündeki `VARSAYILAN_...` satırlarına da yazabilirsin. Kurulum modunda kaydedilen değerler bunların yerine geçer.
@@ -55,7 +55,6 @@ Veriler (araç kayıtları, rotalar, olaylar) `sunucu/veri/durum.json` dosyasın
 | `GPS_VAR` | GPS modülü takınca `1` yap (TinyGPSPlus kütüphanesi gerekir) |
 | `SABIT_ENLEM`, `SABIT_BOYLAM` | GPS yokken gönderilecek konum |
 | `BUZZER_ACIK` | buzzer ters çalışıyorsa `LOW` |
-| `OLED_ADRES` | ekran açılmıyorsa `0x3D` dene |
 
 ## Sunucu ayarları (ortam değişkenleri)
 
@@ -75,7 +74,7 @@ Cihaz `POST /api/konum`, `/api/panik` ve `/api/iptal` adreslerine JSON gönderir
 
 ```
 D=goruldu          olayın durumu: normal | panik | goruldu
-M=Yardim yolda     panelden gelen mesaj (Türkçe harfler ekran için sadeleştirilir)
+M=Yardim yolda     panelden gelen mesaj (Türkçe harfler sadeleştirilir)
 K=bip              panel cihazı öttürmek istiyor
 ```
 

@@ -407,16 +407,15 @@ for (const ad of ['oled', 'w_ognd', 'w_ovcc', 'w_oscl', 'w_osda']) {
 // ============================================================ adımlar
 const sw = renk => `<span class="kablo" style="background:#${renk.toString(16).padStart(6, '0')}"></span>`;
 const HEPSI = ['esp', 'w_gnd', 'w_3v3', 'buton', 'w_d4', 'w_bgnd', 'w_d18', 'r_yesil', 'led_yesil', 'w_d19', 'r_sari', 'led_sari',
-  'buzzer', 'w_d23', 'w_bvcc', 'w_bgnd2', 'oled', 'w_ognd', 'w_ovcc', 'w_oscl', 'w_osda'];
+  'buzzer', 'w_d23', 'w_bvcc', 'w_bgnd2'];
 
 const ADIMLAR = [
   {
     baslik: 'Ne yapıyoruz?', hepsi: true, kamera: [0, 52, 60, 0, -1, 5, 74],
     html: `
       <p>Arabaya takılacak bir <b>panik butonu</b>. Butona basınca ESP32, Wi-Fi üzerinden panele <b>plaka + konum</b> gönderir; panelde alarm çalar ve harita araca odaklanır. Her 5 saniyede bir konum da gider, yani araç panelden canlı izlenir.</p>
-      <p><b>İki yönlü:</b> panel "Gördüm" deyince araçtaki ekranda <b>YARDIM GELIYOR</b> yazar. Panel ekrana mesaj yazabilir ve cihazı uzaktan öttürebilir.</p>
+      <p><b>İki yönlü:</b> panel "Gördüm" deyince araçtaki sarı LED sürekli yanar ve buzzer özel bir bip çalar; sürücü yardımın yolda olduğunu anlar. Panel cihazı uzaktan da öttürebilir.</p>
       <ul>
-        <li><b>OLED ekran</b>: HAZIR / PANIK! / ILETILDI / YARDIM GELIYOR ve panelin mesajı.</li>
         <li><b>Yeşil LED</b>: Wi-Fi bağlı. Yanıp sönüyorsa bağlanmaya çalışıyor.</li>
         <li><b>Sarı LED</b>: hızlı = gönderiliyor, yavaş = panel bekleniyor, sürekli = yardım geliyor.</li>
         <li><b>Buzzer</b>: basıldı, iletildi, panel gördü ve mesaj geldi için ayrı sesler.</li>
@@ -429,9 +428,7 @@ const ADIMLAR = [
         <tr><td>Yeşil LED, sarı LED</td><td>1 + 1</td></tr>
         <tr><td>220Ω direnç (kırmızı-kırmızı-kahverengi)</td><td>2</td></tr>
         <tr><td>Aktif buzzer modülü</td><td>1</td></tr>
-        <tr><td>0.96" OLED ekran (4 pinli)</td><td>1</td></tr>
         <tr><td>Erkek-erkek kablo</td><td>9</td></tr>
-        <tr><td>Dişi-erkek kablo</td><td>4</td></tr>
         <tr><td>Micro USB kablo</td><td>1</td></tr>
       </table>
       <div class="uyari">Setinde <b>GPS modülü yok</b>. Şimdilik sabit bir konum gönderilir. Gerçek konum için "GPS modülü" adımındaki parça gerekiyor.</div>
@@ -511,22 +508,6 @@ const ADIMLAR = [
       <p class="not">Modülün pinleri breadboard'a girmiyorsa dişi-erkek kablolarla bağla; bağlantılar aynı kalır.</p>`,
   },
   {
-    baslik: 'OLED ekran', ekle: ['oled', 'w_ognd', 'w_ovcc', 'w_oscl', 'w_osda'], kamera: [6, 30, 46, 5, -1, 9, 58],
-    isaretler: [[delik(15, 'j'), 'j15 (D22)'], [delik(12, 'j'), 'j12 (D21)'], [OLED_PIN.SCL, 'SCL'], [OLED_PIN.SDA, 'SDA']],
-    html: `
-      <p>Setindeki 0.96" OLED ekran, araçtaki kişiye ne olduğunu yazar: <b>HAZIR</b>, <b>PANIK!</b>, <b>ILETILDI</b>, panel görünce <b>YARDIM GELIYOR</b> ve panelden gelen mesaj.</p>
-      <p>Ekranı breadboard'un önüne koy, <b>dişi-erkek</b> kablolarla bağla (dişi ucu ekranın pinine, erkek ucu breadboard'a):</p>
-      <ol>
-        <li>${sw(K.siyah)}<b>GND</b> → mavi <b>(−)</b> hat</li>
-        <li>${sw(K.kirmizi)}<b>VCC</b> → kırmızı <b>(+)</b> hat</li>
-        <li>${sw(K.turkuaz)}<b>SCL</b> → <code>j15</code> (D22)</li>
-        <li>${sw(K.pembe)}<b>SDA</b> → <code>j12</code> (D21)</li>
-      </ol>
-      <div class="uyari">Pin sırası modülden modüle değişir; bazılarında VCC ile GND yer değiştirir. <b>Ekranın üstünde yazan adlara göre</b> bağla. VCC ile GND'yi ters bağlamak ekranı bozabilir.</div>
-      <p>SCL ve SDA, <b>I2C</b> adlı iki telli bir haberleşmedir: ESP32 ekrana ne çizeceğini bu iki telden söyler. D21 ve D22, ESP32'nin I2C pinleridir.</p>
-      <p class="not">Ekranın 4 değil 6–7 pini varsa o SPI modeldir, bu bağlantıyla çalışmaz. Ekran hiç açılmıyorsa koddaki <code>OLED_ADRES</code>'i <code>0x3D</code> yap. Kod ekranı bulamazsa ekransız çalışmaya devam eder.</p>`,
-  },
-  {
     baslik: '(İsteğe bağlı) GPS modülü', ekle: ['gps', 'w_gvcc', 'w_ggnd', 'w_gtx', 'w_grx'], gecici: true, kamera: [-20, 30, 44, -18, -1, 7, 46],
     isaretler: [[delik(7, 'j'), 'j7 (RX2)'], [delik(8, 'j'), 'j8 (TX2)']],
     html: `
@@ -539,7 +520,7 @@ const ADIMLAR = [
       </ol>
       <p>TX ile RX <b>çapraz</b> bağlanır: birinin "konuşan" ucu diğerinin "dinleyen" ucuna gider. Modülün pinleri için dişi-erkek kablo kullan.</p>
       <p>Kodda <code>#define GPS_VAR 1</code> yap ve Arduino IDE'de Kütüphane Yöneticisi'nden <b>TinyGPSPlus</b>'ı kur. GPS hızı da panele gider.</p>
-      <p class="not">GPS uyduları ilk açılışta açık havada 1–5 dakikada bulur, kapalı alanda çoğu zaman bulamaz. Bulana kadar ekranda "GPS uydu ariyor" yazar, panele "konum yok" gider ama panik yine de iletilir.</p>`,
+      <p class="not">GPS uyduları ilk açılışta açık havada 1–5 dakikada bulur, kapalı alanda çoğu zaman bulamaz. Bulana kadar panele "konum yok" gider ama panik yine de iletilir.</p>`,
   },
   {
     baslik: 'Kodu yükle ve kur', ekle: [], kamera: [-6, 34, 46, -4, -1, 5, 62],
@@ -548,11 +529,10 @@ const ADIMLAR = [
         <li><b>Arduino IDE 2</b>'yi kur (arduino.cc).</li>
         <li><b>Dosya → Tercihler → Ek kart yöneticisi URL'leri</b> kutusuna şunu yapıştır:<br><code>https://espressif.github.io/arduino-esp32/package_esp32_index.json</code></li>
         <li><b>Araçlar → Kart → Kart Yöneticisi</b>'nde "esp32" ara, <b>Espressif Systems</b>'inkini kur.</li>
-        <li><b>Araçlar → Kütüphaneleri Yönet</b>'te <b>Adafruit SSD1306</b>'yı ara ve kur. "Adafruit GFX" gibi ek kütüphaneleri de kurmayı sorarsa <b>Tümünü kur</b> de.</li>
         <li><code>firmware/panik_buton/panik_buton.ino</code> dosyasını aç. <b>Araçlar → Kart: "ESP32 Dev Module"</b>, Port: kartın COM portu. <b>Yükle</b>'ye bas. Kodda bir şey değiştirmen gerekmiyor.</li>
         <li>Bilgisayarda sunucuyu başlat: <code>sunucu</code> klasöründe <code>npm start</code>. Ekrana yazdığı <code>http://192.168…:3000</code> adresini not et.</li>
       </ol>
-      <p><b>Kurulum modu (ilk açılış):</b> Ayar girilmemişse ekranda <b>KURULUM MODU</b> yazar.</p>
+      <p><b>Kurulum modu (ilk açılış):</b> Ayar girilmemişse sarı ve yeşil LED sırayla yanıp söner; cihaz kurulum modundadır. Ağın tam adı seri monitörde de yazar.</p>
       <ol>
         <li>Telefonun Wi-Fi ayarlarından <code>PANIK-xxxx</code> ağına bağlan. "İnternet yok" derse bağlı kal.</li>
         <li>Kurulum sayfası kendiliğinden açılır. Açılmazsa tarayıcıda <code>192.168.4.1</code> adresine git.</li>
@@ -570,12 +550,12 @@ const ADIMLAR = [
   {
     baslik: 'Çalıştır', ekle: [], calistir: true, kamera: [0, 44, 52, 0, -1, 6, 74],
     html: `
-      <p>Gerçek kartla aynı mantık çalışıyor. Sahnede cihaz ve OLED ekranı, aşağıda küçük bir <b>operatör paneli</b>, kod ve seri monitör var.</p>
+      <p>Gerçek kartla aynı mantık çalışıyor. Sahnede cihaz, aşağıda küçük bir <b>operatör paneli</b>, kod ve seri monitör var.</p>
       <ul>
         <li><b>Butona tıkla</b> (3D'deki kırmızı buton ya da aşağıdaki düğme): panik gider.</li>
-        <li>Operatör panelinde <b>Gördüm</b>'e bas. Cihaz bir sonraki bağlantıda (≈2 sn) "YARDIM GELIYOR" yazar.</li>
-        <li>Panelden <b>mesaj</b> gönder ya da cihazı <b>öttür</b>.</li>
-        <li>Yanlış alarm için butonu <b>3 saniye basılı tut</b>. Ekranda dolan çubuğu izle.</li>
+        <li>Operatör panelinde <b>Gördüm</b>'e bas. Cihaz bir sonraki bağlantıda (≈2 sn) öğrenir: sarı LED sürekli yanar, buzzer özel bip çalar.</li>
+        <li>Panelden cihazı <b>öttür</b> ya da <b>mesaj</b> gönder (cihaz uzun bip çalar, mesaj seri monitörde yazar).</li>
+        <li>Yanlış alarm için butonu <b>3 saniye basılı tut</b>; iptal olunca buzzer uzun bir bip çalar.</li>
       </ul>`,
   },
 ];
@@ -601,7 +581,6 @@ const KOD = [
   ['konum', '    istekGonder("/api/konum");'],
   ['cevap', '    sunucuDurumunaUy();   // D=goruldu: YARDIM GELIYOR'],
   ['konum', '  }'],
-  ['ekran', '  ekranCiz();   // OLED'],
   ['', '}'],
   ['', ''],
   ['', '// Sunucunun cevabı: D=goruldu  M=mesaj  K=bip'],
@@ -1129,13 +1108,13 @@ function efektleriKur(adim) {
 const TANIT = [
   {
     baslik: 'ESP32: beyin', odak: ['esp'], efekt: ['wifi'], kamera: [-23, 20, 24, -22, 1, 2, 32],
-    isaretler: [[pin('D4'), 'D4 · buton'], [pin('D18'), 'D18-D19 · LED'], [V(sutunX(15.5), 1.9, 4.5), 'D21-D23 · ekran, buzzer'],
+    isaretler: [[pin('D4'), 'D4 · buton'], [pin('D18'), 'D18-D19 · LED'], [pin('D23'), 'D23 · buzzer'],
       [V(sutunX(2.5), 1.9, 4.5), 'GND · 3V3'], [V(-33.6, 2.6, 0), 'USB'], [V(-13.9, 2.2, 0), 'Wi-Fi anteni']],
     html: `
       <p><b>ESP32 bu devrenin beyni.</b> Avuç içi kadar bir bilgisayar: yüklediğin kodu çalıştırır, kenarlarındaki <b>pin</b> denen bacaklardan elektrik sinyali okur ve gönderir.</p>
       <ul>
         <li><b>Gümüş kutu</b> (ESP32-WROOM): işlemci ve hafıza burada. Ucundaki zikzak çizgi Wi-Fi anteni; mavi halkalar Wi-Fi yayınını gösteriyor.</li>
-        <li><b>Pin adları</b> kartın üstünde yazar: <code>D4</code> butonu okur, <code>D18</code>/<code>D19</code> LED'leri yakar, <code>D23</code> buzzer'ı öttürür, <code>D21</code>/<code>D22</code> ekranla konuşur.</li>
+        <li><b>Pin adları</b> kartın üstünde yazar: <code>D4</code> butonu okur, <code>D18</code>/<code>D19</code> LED'leri yakar ve <code>D23</code> buzzer'ı öttürür.</li>
         <li><code>GND</code> bütün elektriğin geri döndüğü yer, <code>3V3</code> 3,3 volt besleme çıkışı.</li>
         <li><b>USB girişi</b> hem elektrik verir hem kodu yüklemeye yarar.</li>
       </ul>
@@ -1160,7 +1139,7 @@ const TANIT = [
       <p>Kenardaki uzun hatlar <b>boydan boya</b> bağlıdır; içlerinden akan noktalar bunu gösteriyor.</p>
       <ul>
         <li><b>Mavi (−) hat = GND.</b> Bütün parçaların elektriği buradan ESP32'ye geri döner. Siyah kablo hattı ESP32'nin GND pinine bağlar.</li>
-        <li><b>Kırmızı (+) hat = 3,3 V.</b> Buzzer ve ekran beslemelerini buradan alır. Kırmızı kablo hattı 3V3 pinine bağlar.</li>
+        <li><b>Kırmızı (+) hat = 3,3 V.</b> Buzzer beslemesini buradan alır. Kırmızı kablo hattı 3V3 pinine bağlar.</li>
       </ul>
       <div class="uyari">Bir parça çalışmıyorsa ilk bakılacak yer GND bağlantısıdır. Elektrik geri dönemezse hiçbir şey çalışmaz.</div>`,
   },
@@ -1197,17 +1176,6 @@ const TANIT = [
         <li><b>I/O</b>: D23'ten gelen öt/sus sinyali (mavi kablo, akan noktalar).</li>
         <li><b>VCC</b>: kırmızı (+) hattan 3,3 V besleme. <b>GND</b>: mavi (−) hat.</li>
         <li>Kod farklı bip desenleri çalar: 1 bip butona basıldı, 2 bip panik iletildi, uzun desen panel gördü.</li>
-      </ul>`,
-  },
-  {
-    baslik: 'OLED ekran: cihazın yüzü', odak: ['esp', 'oled', 'w_osda', 'w_oscl', 'w_ognd', 'w_ovcc'], efekt: ['i2c'], kamera: [4, 26, 40, 2, -1, 8, 58],
-    isaretler: [[V(25, -2.3, 11.3), 'SCL saat · SDA veri'], [V(24, -2.2, 16.6), 'adres 0x3C']],
-    html: `
-      <p>OLED, cihazın sürücüyle konuşan yüzü: 128 × 64 küçük noktadan oluşan bir ekran.</p>
-      <ul>
-        <li>ESP32 ekranla <b>iki telle</b> konuşur. <b>SCL</b> (turkuaz kablo, sarı noktalar) saat teli, "şimdi" der. <b>SDA</b> (pembe kablo, turuncu noktalar) veri teli, "bu noktayı yak" der; ekran da aynı telden cevap verir.</li>
-        <li>Bu iki telli konuşmanın adı <b>I2C</b>. Ekranın adresi <code>0x3C</code>; ESP32 ona bu adresle seslenir.</li>
-        <li>Siyah (GND) ve kırmızı (VCC) teller ekranı besler.</li>
       </ul>`,
   },
 ].map(a => ({ ...a, tanit: true, hepsi: true, ekle: [] }));

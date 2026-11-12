@@ -2,24 +2,21 @@
   PANIK BUTONU v2 - ESP32
   =======================
   - Butona bas  -> panele PANIK + PLAKA + KONUM gider. Gidemezse 2 sn'de bir tekrar dener.
-  - Panel "Gordum" deyince ekranda YARDIM GELIYOR yazar, buzzer haber verir.
-  - Panelden yazilan mesaj ekranda gorunur. Panel cihazi uzaktan otturebilir.
+  - Panel "Gordum" deyince sari LED surekli yanar, buzzer ozel bir bip calar.
+  - Panelden gelen mesaj seri monitorde yazar (uzun bip). Panel cihazi uzaktan otturebilir.
   - Yanlis alarm: panik sirasinda butona 3 sn basili tut -> iptal edilir.
   - Her 5 sn'de (panik sirasinda 2 sn'de) bir konum gider: canli takip.
   - KURULUM MODU: butona basili tutarken karti ac (ya da EN tusuna bas), 2 sn bekle.
     Telefonla "PANIK-xxxx" Wi-Fi agina baglan, acilan sayfadan Wi-Fi / sunucu / plaka gir.
     Boylece kodu degistirip yeniden yuklemeden ayar degistirebilirsin.
 
-  Gereken kutuphaneler (Arduino IDE > Kutuphane Yoneticisi):
-    "Adafruit SSD1306" (Adafruit GFX'i de kurmayi sorar, "Tumunu kur" de)
-    GPS kullanacaksan ayrica "TinyGPSPlus"
+  Ek kutuphane gerekmez. GPS kullanacaksan "TinyGPSPlus" kur (Kutuphane Yoneticisi).
 
   Baglantilar (3D rehberdeki gibi):
     Buton      : D4  ile GND arasi
     Yesil LED  : D18 -> 220 ohm -> LED -> GND      (Wi-Fi durumu)
     Sari LED   : D19 -> 220 ohm -> LED -> GND      (panik durumu)
     Buzzer     : I/O -> D23, VCC -> 3V3, GND -> GND
-    OLED       : SDA -> D21, SCL -> D22, VCC -> 3V3, GND -> GND
     GPS (ops.) : GPS TX -> D16 (RX2), GPS RX -> D17 (TX2), VCC -> 3V3, GND -> GND
 */
 
@@ -38,7 +35,6 @@ const double SABIT_ENLEM  = 41.0082;
 const double SABIT_BOYLAM = 28.9784;
 
 #define BUZZER_ACIK HIGH  // buzzer ters calisiyorsa (surekli otuyorsa) LOW yap
-#define OLED_ADRES  0x3C  // ekran hic acilmiyorsa 0x3D dene
 // =================================================================
 
 #include <WiFi.h>
@@ -46,9 +42,6 @@ const double SABIT_BOYLAM = 28.9784;
 #include <WebServer.h>
 #include <DNSServer.h>
 #include <Preferences.h>
-#include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
 #if GPS_VAR
 #include <TinyGPSPlus.h>
 TinyGPSPlus gps;
@@ -61,8 +54,6 @@ const int BUTON_PIN  = 4;   // D4
 const int YESIL_LED  = 18;  // D18
 const int SARI_LED   = 19;  // D19
 const int BUZZER_PIN = 23;  // D23
-const int OLED_SDA   = 21;  // D21
-const int OLED_SCL   = 22;  // D22
 
 const unsigned long ARALIK_NORMAL  = 5000; // normalde konum araligi
 const unsigned long ARALIK_OLAY    = 2000; // panik surerken konum araligi
@@ -77,9 +68,6 @@ Durum durum = NORMAL;
 struct Ayarlar { String wifiAdi, wifiSifre, sunucu, plaka, anahtar; };
 Ayarlar ayar;
 
-Adafruit_SSD1306 ekran(128, 64, &Wire, -1);
-bool ekranVar = false;
-
 volatile bool butonaBasildi = false;
 volatile unsigned long sonKesme = 0;
 bool basiliydi = false;
@@ -92,9 +80,6 @@ int basarisizDeneme = 0;
 bool oncekiBagli = false;
 String sunucuDurumu = "";   // sunucunun son soyledigi: normal / panik / goruldu
 String sonMesaj = "";       // panelden gelen son mesaj
-String geciciYazi = "";
-unsigned long geciciBitis = 0;
-unsigned long sonEkran = 0;
 
 // ---------------------------------------------------------------- buzzer (beklemesiz desen calar)
 // Desen: acik, kapali, acik, kapali... sureleri (ms)
@@ -184,114 +169,6 @@ bool konumAl(double& enlem, double& boylam, double& hiz, const char*& kaynak) {
 #endif
 }
 
-// ---------------------------------------------------------------- ekran
-void ortala(const String& yazi, int y, int boyut) {
-  ekran.setTextSize(boyut);
-  int x = (128 - (int)yazi.length() * 6 * boyut) / 2;
-  ekran.setCursor(x < 0 ? 0 : x, y);
-  ekran.print(yazi);
-}
-
-void wifiCubuklari(int x, int y) {
-  if (WiFi.status() != WL_CONNECTED) {
-    ekran.setCursor(x, y);
-    ekran.print((millis() / 500) % 2 ? "--" : "  ");
-    return;
-  }
-  int rssi = WiFi.RSSI();
-  int seviye = rssi > -55 ? 4 : rssi > -65 ? 3 : rssi > -75 ? 2 : 1;
-  for (int i = 0; i < 4; i++) {
-    int h = 2 + i * 2;
-    if (i < seviye) ekran.fillRect(x + i * 3, y + 8 - h, 2, h, SSD1306_WHITE);
-    else ekran.drawPixel(x + i * 3, y + 7, SSD1306_WHITE);
-  }
-}
-
-void ekranBasit(const char* satir1, const char* satir2, const char* satir3 = "") {
-  if (!ekranVar) return;
-  ekran.clearDisplay();
-  ekran.setTextColor(SSD1306_WHITE);
-  ortala(satir1, 8, 2);
-  ortala(satir2, 34, 1);
-  ortala(satir3, 48, 1);
-  ekran.display();
-}
-
-void ekranCiz() {
-  if (!ekranVar) return;
-  unsigned long simdi = millis();
-  bool yanson = (simdi / 400) % 2;
-  ekran.clearDisplay();
-  ekran.setTextWrap(false);
-  ekran.setTextColor(SSD1306_WHITE);
-
-  // ust satir: plaka + Wi-Fi gucu
-  ekran.setTextSize(1);
-  ekran.setCursor(0, 0);
-  ekran.print(ayar.plaka);
-  wifiCubuklari(116, 0);
-  ekran.drawFastHLine(0, 10, 128, SSD1306_WHITE);
-
-  bool olayVar = durum == GONDERILIYOR || durum == ILETILDI || durum == YARDIM_GELIYOR;
-
-  if (geciciBitis && simdi < geciciBitis) {
-    ortala(geciciYazi, 26, 1);
-  } else if (durum == NORMAL) {
-    ortala("HAZIR", 16, 2);
-    ekran.setTextSize(1);
-    ekran.setCursor(0, 40);
-    if (WiFi.status() != WL_CONNECTED) ekran.print("Wi-Fi baglaniyor...");
-    else ekran.print(sonKod == 200 ? "Sunucu: bagli" : "Sunucu: ulasilamiyor");
-    const char* kaynak; double e, b, h;
-    konumAl(e, b, h, kaynak);
-    ekran.setCursor(0, 52);
-    ekran.print("Konum: ");
-    ekran.print(strcmp(kaynak, "yok") == 0 ? "GPS uydu ariyor" : kaynak);
-  } else if (durum == GONDERILIYOR) {
-    if (yanson) ekran.fillRect(0, 13, 128, 20, SSD1306_WHITE);
-    ekran.setTextColor(yanson ? SSD1306_BLACK : SSD1306_WHITE);
-    ortala("PANIK!", 16, 2);
-    ekran.setTextColor(SSD1306_WHITE);
-    if (basarisizDeneme == 0) ortala("Gonderiliyor...", 38, 1);
-    else ortala("Sunucu yok, deneme " + String(basarisizDeneme + 1), 38, 1);
-  } else if (durum == ILETILDI) {
-    ortala("ILETILDI", 15, 2);
-    ortala(yanson ? "Panel bekleniyor..." : "Panel bekleniyor", 38, 1);
-  } else if (durum == YARDIM_GELIYOR) {
-    ekran.fillRect(0, 13, 128, 11, SSD1306_WHITE);
-    ekran.setTextColor(SSD1306_BLACK);
-    ortala("YARDIM GELIYOR", 15, 1);
-    ekran.setTextColor(SSD1306_WHITE);
-    ekran.setTextWrap(true);
-    ekran.setCursor(0, 27);
-    ekran.print(sonMesaj.length() ? sonMesaj : String("Panel olayi gordu."));
-    ekran.setTextWrap(false);
-  } else if (durum == IPTAL_EDILIYOR) {
-    ortala("IPTAL", 15, 2);
-    ortala(basarisizDeneme ? "Sunucu yok, deneniyor" : "Gonderiliyor...", 38, 1);
-  }
-
-  // alt satir: iptal ipucu ya da basili tutma cubugu
-  if (olayVar && !(geciciBitis && simdi < geciciBitis)) {
-    bool basili = digitalRead(BUTON_PIN) == LOW;
-    if (basili && !iptalKilidi) {
-      unsigned long sure = min(simdi - basmaAni, IPTAL_SURESI);
-      ekran.drawRect(0, 56, 128, 8, SSD1306_WHITE);
-      ekran.fillRect(0, 56, (int)(128 * sure / IPTAL_SURESI), 8, SSD1306_WHITE);
-    } else if (durum != YARDIM_GELIYOR || sonMesaj.length() == 0) {
-      ekran.setTextSize(1);
-      ekran.setCursor(0, 56);
-      ekran.print("Iptal: 3sn basili tut");
-    }
-  }
-  ekran.display();
-}
-
-void gecici(const String& yazi, unsigned long sure) {
-  geciciYazi = yazi;
-  geciciBitis = millis() + sure;
-}
-
 // ---------------------------------------------------------------- sunucu ile konusma
 // Sunucunun cevabi satir satir:  D=normal|panik|goruldu   M=mesaj   K=bip
 void cevabiIsle(const String& cevap) {
@@ -362,7 +239,6 @@ void sunucuDurumunaUy() {
   } else if (sunucuDurumu == "normal" && (durum == ILETILDI || durum == YARDIM_GELIYOR)) {
     durum = NORMAL;
     sonMesaj = "";
-    gecici("OLAY KAPATILDI", 4000);
     Serial.println("Panel olayi kapatti.");
   }
 }
@@ -434,7 +310,6 @@ void kurulumKaydet() {
 
 void kurulumModu() {
   Serial.println("\n=== KURULUM MODU ===");
-  ekranBasit("KURULUM", "Wi-Fi aglari", "taraniyor...");
 
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
@@ -461,28 +336,12 @@ void kurulumModu() {
   web.begin();
 
   Serial.printf("Telefonla '%s' Wi-Fi agina baglan, tarayicida http://%s adresini ac.\n", apAdi, ip.toString().c_str());
-  unsigned long sonCizim = 0;
   while (true) {
     dns.processNextRequest();
     web.handleClient();
     bool yanson = (millis() / 500) % 2;
     digitalWrite(SARI_LED, yanson);
     digitalWrite(YESIL_LED, !yanson);
-    if (ekranVar && millis() - sonCizim > 1000) {
-      sonCizim = millis();
-      ekran.clearDisplay();
-      ekran.setTextColor(SSD1306_WHITE);
-      ekran.fillRect(0, 0, 128, 11, SSD1306_WHITE);
-      ekran.setTextColor(SSD1306_BLACK);
-      ortala("KURULUM MODU", 2, 1);
-      ekran.setTextColor(SSD1306_WHITE);
-      ekran.setTextSize(1);
-      ekran.setCursor(0, 16); ekran.print("1) Telefonla baglan:");
-      ekran.setCursor(0, 27); ekran.print("   "); ekran.print(apAdi);
-      ekran.setCursor(0, 41); ekran.print("2) Tarayicida ac:");
-      ekran.setCursor(0, 52); ekran.print("   "); ekran.print(ip.toString());
-      ekran.display();
-    }
     delay(2);
   }
 }
@@ -498,26 +357,18 @@ void setup() {
   pinMode(BUZZER_PIN, OUTPUT);
   buzzer(false);
 
-  // OLED: once adreste biri cevap veriyor mu bak; yoksa ekransiz devam et
-  Wire.begin(OLED_SDA, OLED_SCL);
-  Wire.beginTransmission(OLED_ADRES);
-  ekranVar = Wire.endTransmission() == 0 && ekran.begin(SSD1306_SWITCHCAPVCC, OLED_ADRES, true, false);
-  if (!ekranVar) Serial.println("OLED bulunamadi (kablolar ya da adres). Ekransiz devam ediliyor.");
-
   ayarlariYukle();
   Serial.printf("\nPanik butonu v%s\nPlaka: %s\n", SURUM, ayar.plaka.c_str());
 
   // Acilista buton basiliysa 2 sn bekle: hala basiliysa kurulum modu
   bool kurulumIstegi = false;
   if (digitalRead(BUTON_PIN) == LOW) {
-    ekranBasit("KURULUM?", "Basili tutmaya", "devam et...");
     unsigned long t = millis();
     while (digitalRead(BUTON_PIN) == LOW && millis() - t < KURULUM_SURESI) delay(10);
     kurulumIstegi = millis() - t >= KURULUM_SURESI;
   }
   if (kurulumIstegi || ayarlarEksik()) kurulumModu();  // buradan geri donmez
 
-  ekranBasit("PANIK", ayar.plaka.c_str(), "Wi-Fi baglaniyor...");
   attachInterrupt(digitalPinToInterrupt(BUTON_PIN), butonKesmesi, FALLING);
 
 #if GPS_VAR
@@ -560,7 +411,6 @@ void loop() {
       sonDeneme = 0;
       basarisizDeneme = 0;
       sonMesaj = "";
-      geciciBitis = 0;
       iptalKilidi = true;
       CAL(BIP_BIR);
     }
@@ -586,7 +436,7 @@ void loop() {
       if (iptal) {
         durum = NORMAL;
         sonMesaj = "";
-        gecici("IPTAL EDILDI", 3000);
+        Serial.println("Iptal edildi.");
         CAL(BIP_IPTAL);
       } else {
         durum = ILETILDI;
@@ -611,9 +461,4 @@ void loop() {
   else if (durum == ILETILDI) sari = (simdi / 600) % 2;
   else if (durum == YARDIM_GELIYOR) sari = true;
   digitalWrite(SARI_LED, sari);
-
-  if (simdi - sonEkran >= 150) {
-    sonEkran = simdi;
-    ekranCiz();
-  }
 }
