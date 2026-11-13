@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panik Butonu Konum</title>
+<style>
+  :root { --bg:#14161a; --kart:#1e2127; --yazi:#ececec; --soluk:#9ba1a8; --yesil:#3ccf6a; --sari:#ffd34d; --kirmizi:#ff6464; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; background:var(--bg); color:var(--yazi); font-family:system-ui, "Segoe UI", sans-serif;
+         display:flex; flex-direction:column; align-items:center; padding:24px 16px; }
+  h1 { font-size:22px; margin:0 0 6px; }
+  .alt { color:var(--soluk); font-size:14px; margin:0 0 22px; text-align:center; }
+  button { width:100%; max-width:420px; padding:18px; font-size:19px; font-weight:700; border:0; border-radius:14px;
+           background:var(--sari); color:#111; cursor:pointer; }
+  button:disabled { opacity:.4; }
+  .kart { width:100%; max-width:420px; background:var(--kart); border-radius:14px; padding:14px 16px; margin-top:16px; }
+  .satir { display:flex; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:1px solid #2c3038; font-size:16px; }
+  .satir:last-child { border-bottom:0; }
+  .satir span:first-child { color:var(--soluk); }
+  .iyi { color:var(--yesil); font-weight:700; }
+  .uyari { color:var(--sari); font-weight:700; }
+  .kotu { color:var(--kirmizi); font-weight:700; }
+  .not { color:var(--soluk); font-size:13px; max-width:420px; line-height:1.5; margin-top:18px; }
+</style>
+</head>
+<body>
+  <h1>Panik Butonu · Konum</h1>
+  <p class="alt">Telefonun konumunu Bluetooth ile ESP32'ye verir.</p>
+
+  <button id="baglan">Bağlan</button>
+
+  <div class="kart">
+    <div class="satir"><span>Bluetooth</span><span id="bt" class="uyari">bağlı değil</span></div>
+    <div class="satir"><span>Konum</span><span id="konum" class="uyari">bekleniyor</span></div>
+    <div class="satir"><span>Doğruluk</span><span id="dogruluk">–</span></div>
+    <div class="satir"><span>Son gönderim</span><span id="gonderim">–</span></div>
+  </div>
+
+  <p class="not" id="not">Bu sayfa açık ve ekran açıkken konum gönderir. Konum yalnızca Bluetooth ile ESP32'ye gider, internete gönderilmez.</p>
+
+<script>
+// ESP32 kodundaki numaralarla ayni olmali
+const SERVIS_UUID = '7a1e0001-5c3b-4c3e-9d2a-2f6b1c9e0a11';
+const KONUM_UUID  = '7a1e0002-5c3b-4c3e-9d2a-2f6b1c9e0a11';
+const GONDERME_ARALIGI = 3000; // ms
+
+const el = id => document.getElementById(id);
+const yaz = (id, metin, sinif = '') => { el(id).textContent = metin; el(id).className = sinif; };
+
+let cihaz = null, karakteristik = null, mesgul = false;
+let sonKonum = null, sonGonderim = 0, izleme = null, uyanik = null;
+
+if (!navigator.bluetooth) {
+  el('baglan').disabled = true;
+  el('not').innerHTML = '<b class="kotu">Bu tarayıcı Bluetooth desteklemiyor.</b><br>Android: sayfayı <b>Chrome</b> ile aç. iPhone: App Store\'dan <b>Bluefy</b> tarayıcısını kur ve sayfayı onunla aç.';
+}
+
+el('baglan').onclick = async () => {
+  try {
+    cihaz = await navigator.bluetooth.requestDevice({ filters: [{ services: [SERVIS_UUID] }] });
+    cihaz.addEventListener('gattserverdisconnected', koptu);
+    await baglan();
+    konumuIzle();
+    ekraniAcikTut();
+  } catch (e) {
+    yaz('bt', 'bağlanamadı', 'kotu');
+    console.log(e);
+  }
+};
+
+async function baglan() {
+  yaz('bt', 'bağlanıyor...', 'uyari');
+  const sunucu = await cihaz.gatt.connect();
+  const servis = await sunucu.getPrimaryService(SERVIS_UUID);
+  karakteristik = await servis.getCharacteristic(KONUM_UUID);
+  yaz('bt', 'bağlı: ' + (cihaz.name || 'ESP32'), 'iyi');
+  el('baglan').textContent = 'Bağlı';
+  el('baglan').disabled = true;
+  sonGonderim = 0;
+  gonder();
+}
+
+async function koptu() {
+  karakteristik = null;
+  yaz('bt', 'koptu, tekrar deneniyor...', 'kotu');
+  for (let i = 0; i < 10 && cihaz && !karakteristik; i++) {
+    await new Promise(r => setTimeout(r, 2000));
+    try { await baglan(); } catch (e) { console.log(e); }
+  }
+  if (!karakteristik) {
+    yaz('bt', 'bağlı değil', 'kotu');
+    el('baglan').textContent = 'Tekrar bağlan';
+    el('baglan').disabled = false;
+  }
+}
+
+function konumuIzle() {
+  if (izleme !== null) return;
+  if (!navigator.geolocation) { yaz('konum', 'konum desteklenmiyor', 'kotu'); return; }
+  izleme = navigator.geolocation.watchPosition(p => {
+    sonKonum = p.coords;
+    yaz('konum', p.coords.latitude.toFixed(5) + ', ' + p.coords.longitude.toFixed(5), 'iyi');
+    yaz('dogruluk', '± ' + Math.round(p.coords.accuracy) + ' m');
+    gonder();
+  }, e => {
+    yaz('konum', e.code === 1 ? 'izin verilmedi' : 'alınamadı', 'kotu');
+  }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 });
+}
+
+async function gonder() {
+  if (!karakteristik || !sonKonum || mesgul) return;
+  if (Date.now() - sonGonderim < GONDERME_ARALIGI) return;
+  mesgul = true;
+  try {
+    const metin = sonKonum.latitude.toFixed(6) + ',' + sonKonum.longitude.toFixed(6);
+    await karakteristik.writeValueWithoutResponse(new TextEncoder().encode(metin));
+    sonGonderim = Date.now();
+    yaz('gonderim', new Date().toLocaleTimeString('tr-TR'), 'iyi');
+  } catch (e) {
+    console.log(e);
+  } finally {
+    mesgul = false;
+  }
+}
+// konum degismese de ESP32'ye duzenli hatirlat
+setInterval(gonder, GONDERME_ARALIGI);
+
+async function ekraniAcikTut() {
+  try { if ('wakeLock' in navigator) uyanik = await navigator.wakeLock.request('screen'); } catch (e) {}
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && cihaz) ekraniAcikTut(); });
+</script>
+</body>
+</html>
