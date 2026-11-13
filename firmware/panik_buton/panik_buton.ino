@@ -10,14 +10,14 @@
     Telefonla "PANIK-xxxx" Wi-Fi agina baglan, acilan sayfadan Wi-Fi / sunucu / plaka gir.
     Boylece kodu degistirip yeniden yuklemeden ayar degistirebilirsin.
 
-  Ek kutuphane gerekmez. GPS kullanacaksan "TinyGPSPlus" kur (Kutuphane Yoneticisi).
+  Ek kutuphane gerekmez. Cihazda GPS yok: internet telefonun erisim noktasindan,
+  konum ileride telefondaki uygulamadan gelir (KONUM_TELEFONDAN).
 
   Baglantilar (3D rehberdeki gibi):
     Buton      : D4  ile GND arasi
     Yesil LED  : D18 -> 220 ohm -> LED -> GND      (Wi-Fi durumu)
     Sari LED   : D19 -> 220 ohm -> LED -> GND      (panik durumu)
     Buzzer     : I/O -> D23, VCC -> 3V3, GND -> GND
-    GPS (ops.) : GPS TX -> D16 (RX2), GPS RX -> D17 (TX2), VCC -> 3V3, GND -> GND
 */
 
 // ============================ AYARLAR ============================
@@ -29,8 +29,10 @@ const char* VARSAYILAN_SUNUCU     = "http://192.168.1.50:3000";
 const char* VARSAYILAN_PLAKA      = "34 ABC 123";
 const char* VARSAYILAN_ANAHTAR    = "panik-1234";   // sunucudaki ile ayni olmali
 
-// GPS modulun varsa 1 yap. 0 iken asagidaki sabit konum gonderilir.
-#define GPS_VAR 0
+// Konum: cihazda GPS yok.
+//   1 = konum telefondan gelir; cihaz koordinatsiz gonderir ("telefon" diye isaretler)
+//   0 = test icin asagidaki sabit koordinat gonderilir
+#define KONUM_TELEFONDAN 1
 const double SABIT_ENLEM  = 41.0082;
 const double SABIT_BOYLAM = 28.9784;
 
@@ -42,11 +44,6 @@ const double SABIT_BOYLAM = 28.9784;
 #include <WebServer.h>
 #include <DNSServer.h>
 #include <Preferences.h>
-#if GPS_VAR
-#include <TinyGPSPlus.h>
-TinyGPSPlus gps;
-HardwareSerial gpsSerial(2);
-#endif
 
 const char* SURUM = "2.0";
 
@@ -151,15 +148,8 @@ String plakaTemizle(String s) {
 // ---------------------------------------------------------------- konum
 bool konumAl(double& enlem, double& boylam, double& hiz, const char*& kaynak) {
   hiz = -1;
-#if GPS_VAR
-  if (gps.location.isValid() && gps.location.age() < 10000) {
-    enlem = gps.location.lat();
-    boylam = gps.location.lng();
-    if (gps.speed.isValid()) hiz = gps.speed.kmph();
-    kaynak = "gps";
-    return true;
-  }
-  kaynak = "yok";  // GPS henuz uydu bulamadi
+#if KONUM_TELEFONDAN
+  kaynak = "telefon";  // simdilik koordinat yok; ileride telefon konumu Bluetooth ile cihaza verecek
   return false;
 #else
   enlem = SABIT_ENLEM;
@@ -371,10 +361,6 @@ void setup() {
 
   attachInterrupt(digitalPinToInterrupt(BUTON_PIN), butonKesmesi, FALLING);
 
-#if GPS_VAR
-  gpsSerial.begin(9600, SERIAL_8N1, 16, 17);  // RX=16, TX=17
-#endif
-
   Serial.printf("Wi-Fi'ye baglaniliyor: %s\n", ayar.wifiAdi.c_str());
   WiFi.mode(WIFI_STA);
   WiFi.setAutoReconnect(true);
@@ -382,9 +368,6 @@ void setup() {
 }
 
 void loop() {
-#if GPS_VAR
-  while (gpsSerial.available()) gps.encode(gpsSerial.read());
-#endif
   unsigned long simdi = millis();
   desenGuncelle();
 

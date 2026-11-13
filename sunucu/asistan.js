@@ -89,7 +89,7 @@ function olayMetni(olay, arac) {
     'Araç: Araç 1',
     `Olay durumu: ${DURUM[olay.durum] || olay.durum}`,
     `Başlangıç: ${tarihTR(olay.zaman)} (şu an: ${tarihTR(Date.now())})`,
-    `Konum kaynağı: ${olay.kaynak === 'sabit' ? 'sabit konum (GPS yok, gerçek konum bilinmiyor)' : olay.kaynak}`,
+    `Konum kaynağı: ${olay.kaynak === 'sabit' ? 'sabit test konumu (gerçek konum bilinmiyor)' : olay.kaynak === 'telefon' ? 'telefon (konum henüz gelmedi)' : olay.kaynak}`,
     `Yaklaşık adres: ${olay.adres || 'bilinmiyor'}`,
   ];
   if (arac) {

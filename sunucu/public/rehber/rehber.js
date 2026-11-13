@@ -299,30 +299,6 @@ let buzzerGrup;
   buzzerGrup = parca('buzzer', g, 'Aktif buzzer modülü: I/O → D23, VCC → (+) hat, GND → (−) hat.');
 }
 
-// ---------------------------------------------------------- GPS modülü (setinde yok - isteğe bağlı)
-const GPS_PIN = { VCC: new V3(-23.5, -2.35, 13.3), RX: new V3(-22.5, -2.35, 13.3), TX: new V3(-21.5, -2.35, 13.3), GND: new V3(-20.5, -2.35, 13.3) };
-{
-  const g = new THREE.Group();
-  const doku = tuval(6.2, 4.2, 64, (c, P) => {
-    const X = x => (x + 25.1) * P, Z = z => (z - 12.9) * P;
-    c.fillStyle = '#2357b0'; c.fillRect(0, 0, c.canvas.width, c.canvas.height);
-    c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `700 ${0.36 * P}px Consolas, monospace`;
-    Object.entries(GPS_PIN).forEach(([ad, p]) => {
-      c.fillStyle = '#d6b25e'; c.beginPath(); c.arc(X(p.x), Z(13.3), 0.3 * P, 0, 7); c.fill();
-      c.fillStyle = '#fff'; c.fillText(ad, X(p.x), Z(13.95));
-    });
-    c.font = `700 ${0.42 * P}px sans-serif`; c.fillText('GPS NEO-6M', X(-22), Z(16.6));
-  });
-  g.add(kutu(6.2, 0.3, 4.2, ustDokulu(doku, toon(0x2357b0)), -22, -2.75, 15));
-  g.add(kutu(2.4, 0.5, 2.4, toon(0xc4c8cd), -22, -2.35, 15.3));
-  for (const p of Object.values(GPS_PIN)) g.add(kutu(0.3, 0.5, 0.3, toon(0xd6b25e), p.x, p.y, p.z, false));
-  g.add(kutu(3.4, 0.9, 3.4, toon(0xc9a66b), -14, -2.55, 16));
-  g.add(silindir(0.5, 0.1, toon(0xd6b25e), -14, -2.05, 16, false));
-  const anten = new THREE.CatmullRomCurve3([new V3(-14, -2.0, 16), new V3(-16, -1.6, 17.2), new V3(-19.5, -2.3, 16.4)]);
-  g.add(new THREE.Mesh(new THREE.TubeGeometry(anten, 20, 0.1, 6), toon(0x333333)));
-  parca('gps', g, 'GPS modülü (GY-NEO6MV2). Setinde YOK, ayrıca alınması gerekir.');
-}
-
 // ---------------------------------------------------------- kablolar
 const kablolar = {};
 function kablo(ad, a, b, renk, h, aciklama) {
@@ -339,7 +315,7 @@ function kablo(ad, a, b, renk, h, aciklama) {
   kablolar[ad] = { geo, toplam: geo.index.count, SEG, RAD, egri };
   return parca(ad, g, aciklama);
 }
-const K = { siyah: 0x262626, kirmizi: 0xd8352a, sari: 0xf2c230, yesil: 0x2fa84f, turuncu: 0xf28a1e, mavi: 0x2f6fd6, beyaz: 0xeeeeee, mor: 0x8a4fd6 };
+const K = { siyah: 0x262626, kirmizi: 0xd8352a, sari: 0xf2c230, yesil: 0x2fa84f, turuncu: 0xf28a1e, mavi: 0x2f6fd6 };
 kablo('w_gnd', delik(3, 'j'), ray(3, 'eksi'), K.siyah, 3, 'Siyah kablo: j3 (GND) → (−) hat');
 kablo('w_3v3', delik(2, 'j'), ray(2, 'arti'), K.kirmizi, 4, 'Kırmızı kablo: j2 (3V3) → (+) hat');
 kablo('w_d4', delik(6, 'j'), delik(22, 'j'), K.sari, 5, 'Sarı kablo: j6 (D4) → j22 (buton)');
@@ -349,10 +325,6 @@ kablo('w_d19', delik(11, 'j'), delik(40, 'j'), K.turuncu, 8, 'Turuncu kablo: j11
 kablo('w_d23', delik(16, 'j'), delik(52, 'j'), K.mavi, 9.5, 'Mavi kablo: j16 (D23) → j52 (buzzer I/O)');
 kablo('w_bvcc', ray(53, 'arti'), delik(53, 'j'), K.kirmizi, 4, 'Kırmızı kablo: (+) hat → j53 (buzzer VCC)');
 kablo('w_bgnd2', delik(54, 'j'), ray(54, 'eksi'), K.siyah, 3, 'Siyah kablo: j54 (buzzer GND) → (−) hat');
-kablo('w_gvcc', GPS_PIN.VCC, ray(12, 'arti'), K.kirmizi, 3, 'GPS VCC → (+) hat');
-kablo('w_ggnd', GPS_PIN.GND, ray(14, 'eksi'), K.siyah, 3, 'GPS GND → (−) hat');
-kablo('w_gtx', GPS_PIN.TX, delik(7, 'j'), K.beyaz, 4.5, 'GPS TX → j7 (RX2 / GPIO16)');
-kablo('w_grx', GPS_PIN.RX, delik(8, 'j'), K.mor, 5.5, 'GPS RX → j8 (TX2 / GPIO17)');
 
 sahne.traverse(o => { if (o.isMesh && o !== zemin) { o.castShadow = true; o.receiveShadow = true; } });
 for (const l of Object.values(ledler)) l.hale.castShadow = false;
@@ -431,7 +403,7 @@ const ADIMLAR = [
         <tr><td>Erkek-erkek kablo</td><td>9</td></tr>
         <tr><td>Micro USB kablo</td><td>1</td></tr>
       </table>
-      <div class="uyari">Setinde <b>GPS modülü yok</b>. Şimdilik sabit bir konum gönderilir. Gerçek konum için "GPS modülü" adımındaki parça gerekiyor.</div>
+      <div class="uyari"><b>Konum telefondan gelir:</b> telefon hem interneti (hotspot) hem konumu sağlar; ileride Bluetooth'lu mobil uygulama ile. O zamana kadar haritada konum görünmez. Denemek için kodda <code>KONUM_TELEFONDAN 0</code> yaparsan <b>sabit bir test konumu</b> gider.</div>
       <p><b>Sıra:</b> önce parçaları sahnede tek tek tanıyacağız (ne işe yarıyor, elektrik içinden nasıl akıyor), sonra devreyi adım adım kuracağız.</p>
       <p class="not">Sahnede bitmiş hâlini görüyorsun. Parçaların üstüne gelince ne olduklarını yazar.</p>`,
   },
@@ -506,21 +478,6 @@ const ADIMLAR = [
         <li>${sw(K.siyah)}<b>Siyah kablo:</b> <code>j54</code> (GND) → mavi <b>(−)</b> hat</li>
       </ol>
       <p class="not">Modülün pinleri breadboard'a girmiyorsa dişi-erkek kablolarla bağla; bağlantılar aynı kalır.</p>`,
-  },
-  {
-    baslik: '(İsteğe bağlı) GPS modülü', ekle: ['gps', 'w_gvcc', 'w_ggnd', 'w_gtx', 'w_grx'], gecici: true, kamera: [-20, 30, 44, -18, -1, 7, 46],
-    isaretler: [[delik(7, 'j'), 'j7 (RX2)'], [delik(8, 'j'), 'j8 (TX2)']],
-    html: `
-      <div class="uyari"><b>Bu parça setinde yok.</b> Gerçek konum için <b>GY-NEO6MV2 (NEO-6M) GPS modülü</b> gerekiyor. Almadan da devam edebilirsin; sistem sabit konumla çalışır.</div>
-      <ol>
-        <li>${sw(K.kirmizi)}GPS <b>VCC</b> → kırmızı (+) hat</li>
-        <li>${sw(K.siyah)}GPS <b>GND</b> → mavi (−) hat</li>
-        <li>${sw(K.beyaz)}GPS <b>TX</b> → <code>j7</code> (RX2 / GPIO16)</li>
-        <li>${sw(K.mor)}GPS <b>RX</b> → <code>j8</code> (TX2 / GPIO17)</li>
-      </ol>
-      <p>TX ile RX <b>çapraz</b> bağlanır: birinin "konuşan" ucu diğerinin "dinleyen" ucuna gider. Modülün pinleri için dişi-erkek kablo kullan.</p>
-      <p>Kodda <code>#define GPS_VAR 1</code> yap ve Arduino IDE'de Kütüphane Yöneticisi'nden <b>TinyGPSPlus</b>'ı kur. GPS hızı da panele gider.</p>
-      <p class="not">GPS uyduları ilk açılışta açık havada 1–5 dakikada bulur, kapalı alanda çoğu zaman bulamaz. Bulana kadar panele "konum yok" gider ama panik yine de iletilir.</p>`,
   },
   {
     baslik: 'Kodu yükle ve kur', ekle: [], kamera: [-6, 34, 46, -4, -1, 5, 62],
@@ -1208,7 +1165,6 @@ function urunKarti() {
   g.add(yerlestir(yaziKutusu(4.6, 0.7, 5.4, 0xc3c8cf, 'ESP32'), -1.5, 0.85, -0.6));
   g.add(kutu(4.6, 0.12, 1.6, toon(0x151515), -1.5, 0.56, -4.4, false));
   g.add(yerlestir(yaziKutusu(5.2, 0.8, 5.2, 0xc3c8cf, '4G LTE'), 5.2, 0.9, -2.4));
-  g.add(yerlestir(yaziKutusu(3.4, 1.0, 3.4, 0xc9a66b, 'GPS', '#3b2a10'), 5.6, 1.0, 3.4));
   g.add(kutu(2.2, 0.6, 2.2, toon(0x222222), -6.4, 0.8, 1.4));
   g.add(silindir(0.9, 1.2, toon(0x5a5f66), -6.4, 1.1, 4.1));
   g.add(kutu(3, 1.4, 1.8, toon(0xf0ece2), -7.9, 1.2, -3.6));
@@ -1464,7 +1420,7 @@ Object.assign(EFEKTLER, {
       UR.testKarti.position.y = ZY + 4.8 + (1 - yumusak(inis)) * 7 + (p > 0.9 ? (p - 0.9) * 60 : 0);
       const m = UR.lamba.material;
       if (p < 0.25) { durum = 'kart iğnelere iniyor'; m.color.setHex(0x888888); m.emissive.setHex(0x000000); }
-      else if (p < 0.75) { durum = 'test ediliyor: güç · LED · buton · 4G · GPS'; const y = Math.floor(t / 200) % 2; m.color.setHex(0xffb000); m.emissive.setHex(y ? 0xffb000 : 0x000000); }
+      else if (p < 0.75) { durum = 'test ediliyor: güç · LED · buton · 4G · Bluetooth'; const y = Math.floor(t / 200) % 2; m.color.setHex(0xffb000); m.emissive.setHex(y ? 0xffb000 : 0x000000); }
       else { durum = 'GEÇTİ ✓ · yazılım + seri no yüklendi'; m.color.setHex(0x2fd15a); m.emissive.setHex(0x2fd15a); }
     } });
     etiketEkle(V(0, ZY + 12, 0), () => durum);
@@ -1511,21 +1467,21 @@ const URETIM = [
       <p>Solda masandaki prototip, sağda aynı işi yapan <b>satılabilir ürün</b>. Bu bölümde birinden ötekine nasıl gidildiğini sahne sahne göreceğiz.</p>
       <ul>
         <li><b>Bağlantı:</b> araçta Wi-Fi yok. Ürünün içinde bir <b>4G modem</b> ve SIM kart olur; cihaz her yerden kendi başına internete çıkar.</li>
-        <li><b>Konum:</b> sabit koordinat yerine <b>GPS</b>.</li>
+        <li><b>Konum:</b> sürücünün <b>telefonundan</b> gelir. Bir mobil uygulama telefonun konumunu cihaza <b>Bluetooth</b> ile gönderir; ESP32'de Bluetooth zaten var, ek parça gerekmez.</li>
         <li><b>Güç:</b> USB yerine <b>araç aküsü</b> (12 ya da 24 V). İçinde yedek pil olur; kablo kesilse de çalışır.</li>
         <li><b>Buton:</b> ayrı, kapaklı ve sürücünün elinin altında. Gerçek bir saldırıda ses çıkarmayan <b>sessiz alarm</b> tercih edilebilir.</li>
       </ul>`,
   },
   {
     baslik: 'Ürünün kartı', goster: ['u_kart'], kamera: [0, 22, 26, 0, ZY + 1, 1, 34],
-    isaretler: [[V(-1.5, ZY + 2.4, -0.6), 'ESP32: beyin'], [V(5.2, ZY + 2.5, -2.4), '4G modem'], [V(5.6, ZY + 2.6, 3.4), 'GPS'],
+    isaretler: [[V(-1.5, ZY + 2.4, -0.6), 'ESP32: beyin'], [V(5.2, ZY + 2.5, -2.4), '4G modem'],
       [V(-6.4, ZY + 2.6, 2.6), 'güç: 12 V → 3,3 V'], [V(-7.9, ZY + 2.8, -3.6), 'araç kablosu'], [V(-0.7, ZY + 1.6, 5.3), 'test noktaları']],
     html: `
       <p>Breadboard'daki modüllerin ve kabloların yerini <b>tek bir devre kartı</b> alır. Kartı bir donanım (elektronik) tasarımcısı çizer.</p>
       <ul>
         <li><b>ESP32 modülü:</b> aynı beyin, bu kez karta lehimli. Ucundaki siyah bölge anten; altında bakır bırakılmaz.</li>
         <li><b>4G modem:</b> Wi-Fi'nin yerini alır. Veri gönderirken anlık olarak çok akım çeker; güç devresi buna göre tasarlanır.</li>
-        <li><b>GPS:</b> uydulardan konum alan parça ve anteni.</li>
+        <li><b>Konum:</b> ayrı bir parça yok. Telefon konumunu ESP32'nin içindeki <b>Bluetooth</b> ile gönderir.</li>
         <li><b>Güç bölümü:</b> aracın 12 V'unu 3,3 V'a indirir. Marşta düşen, bazen ani yükselen araç elektriğine karşı korumalıdır.</li>
         <li><b>Test noktaları:</b> fabrikada her kartı birkaç saniyede test etmek için küçük altın pedler.</li>
       </ul>`,
@@ -1559,7 +1515,7 @@ const URETIM = [
       <p>Lehimlenen her kart bir <b>iğneli test yatağına</b> oturur. Altın iğneler kartın test noktalarına dokunur.</p>
       <ul>
         <li>Birkaç saniyede kartın içine <b>yazılım</b> yüklenir, ona özel bir <b>seri numarası</b> ve dijital kimlik yazılır.</li>
-        <li>Yazılımın gizli "fabrika test modu" her şeyi dener: güç gerilimleri, LED, buton, 4G modem, GPS.</li>
+        <li>Yazılımın gizli "fabrika test modu" her şeyi dener: güç gerilimleri, LED, buton, 4G modem, Bluetooth.</li>
         <li>Lamba: sarı = test ediliyor, yeşil = geçti. Geçemeyen kart ayrılır ve incelenir.</li>
       </ul>
       <div class="uyari">Bu, senin Bölüm "Kur"daki "her parçayı tek tek test et" yaklaşımının fabrikadaki hâli.</div>`,
@@ -1650,7 +1606,6 @@ function gorunurler(i) {
   if (ADIMLAR[i].hepsi) return new Set(['bb', ...HEPSI]);
   const s = new Set(['bb']);
   for (let k = 1; k <= i; k++) {
-    if (ADIMLAR[k].gecici && k !== i) continue;
     for (const ad of ADIMLAR[k].ekle) s.add(ad);
   }
   return s;

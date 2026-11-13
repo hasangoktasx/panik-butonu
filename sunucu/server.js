@@ -268,7 +268,7 @@ function telemetri(govde) {
     a.enlem = enlem;
     a.boylam = boylam;
   }
-  a.kaynak = ['gps', 'sabit', 'yok', 'simulasyon'].includes(govde.kaynak) ? govde.kaynak : 'bilinmiyor';
+  a.kaynak = ['telefon', 'sabit', 'simulasyon'].includes(govde.kaynak) ? govde.kaynak : 'bilinmiyor';
   const rssi = Number(govde.rssi);
   a.rssi = Number.isInteger(rssi) && rssi < 0 && rssi > -130 ? rssi : null;
   a.surum = metin(govde.surum, 12) || null;

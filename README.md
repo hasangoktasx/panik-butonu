@@ -24,7 +24,7 @@ sunucu/public/rehber/                  3D adım adım kurulum rehberi
 | Panelin mesajında uzun bip çalar, "öttür" komutuyla öter | Araç kaydı: sahip, telefon (tıkla-ara), araç bilgisi |
 | Kurulum modu: kodu değiştirmeden Wi-Fi / sunucu / plaka girilir | Cihaza mesaj gönderme, cihazı öttürme |
 | Wi-Fi sinyal gücü, sürüm ve çalışma süresi gönderir | Rota geçmişi (15 dk / 1 sa / 6 sa / tümü) ve oynatma |
-| GPS takılınca gerçek konum ve hız | Olayları CSV olarak indirme (Excel'de açılır) |
+| Konum telefondan gelir (cihazda GPS modülü yok) | Olayları CSV olarak indirme (Excel'de açılır) |
 
 ## Başlatma
 
@@ -52,8 +52,8 @@ Veriler (araç kayıtları, rotalar, olaylar) `sunucu/veri/durum.json` dosyasın
 
 | Kod ayarı | Ne işe yarar |
 |---|---|
-| `GPS_VAR` | GPS modülü takınca `1` yap (TinyGPSPlus kütüphanesi gerekir) |
-| `SABIT_ENLEM`, `SABIT_BOYLAM` | GPS yokken gönderilecek konum |
+| `KONUM_TELEFONDAN` | `1`: konum telefondan gelir, cihaz koordinat göndermez. `0`: test için sabit konum gönderir |
+| `SABIT_ENLEM`, `SABIT_BOYLAM` | `KONUM_TELEFONDAN 0` iken gönderilecek test konumu |
 | `BUZZER_ACIK` | buzzer ters çalışıyorsa `LOW` |
 
 ## Sunucu ayarları (ortam değişkenleri)
@@ -82,7 +82,7 @@ Panelin gönderdiği mesaj ve komutlar sırada bekler, cihazın bir sonraki bağ
 
 ## Bilinen sınırlar
 
-- **Setinde GPS yok.** GPS modülü takılana kadar sabit konum gönderilir. Gerçek konum için GY-NEO6MV2 (NEO-6M) gerekiyor.
+- **Cihazda GPS modülü yok.** İnterneti telefonun erişim noktası verir; konum da telefondan gelecek (ileride Bluetooth'lu mobil uygulama ile, ayrı proje). Uygulama gelene kadar haritada konum görünmez; denemek için `KONUM_TELEFONDAN 0` yapıp sabit test konumu gönderebilirsin.
 - ESP32 ile bilgisayar **aynı Wi-Fi ağında** olmalı. Araçta, evden uzakta çalışması için sunucunun internetten erişilebilir olması ve aracın internete bağlanması (telefon erişim noktası ya da SIM'li bir modem modülü) gerekir.
 - `PANEL_SIFRE` vermezsen panel yerel ağdaki herkese açıktır.
 - Bağlantı HTTP'dir (şifrelenmez). Sunucuyu internete açacaksan önüne HTTPS koy.
